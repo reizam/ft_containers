@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:43:47 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/23 05:18:04 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/23 05:45:38 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <exception>
 #include <stdexcept>
 #include "iterator.hpp"
-#include "algo.hpp"
+#include "algorithm.hpp"
 
 namespace ft
 {
