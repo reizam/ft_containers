@@ -6,12 +6,14 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 05:47:49 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/23 06:04:47 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/23 06:29:51 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef TYPE_TRAITS_HPP
 # define TYPE_TRAITS_HPP
+
+#include <uchar.h>
 
 namespace ft
 {
@@ -24,7 +26,7 @@ namespace ft
 	template<typename T, T v>
     struct integral_constant
     {
-      	static T                  		value = v;
+      	static const T                  		value = v;
       	typedef T                           	value_type;
       	typedef integral_constant<T, v>			type;
     
@@ -32,11 +34,17 @@ namespace ft
 	  	{
 		  return value;
 		}
-    };
+	};
+
+ 	template<typename T, T v>
+    const T integral_constant<T, v>::value;
 
 	typedef integral_constant<bool, true>	true_type;
 	
   	typedef integral_constant<bool, false>	false_type;
+	
+	template<typename>
+    struct remove_cv;
 
 	template<typename>
 	struct __is_integral_helper : public false_type {};

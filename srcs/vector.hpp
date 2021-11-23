@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:43:47 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/23 05:45:38 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/23 06:46:43 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include "iterator.hpp"
 #include "algorithm.hpp"
+#include "type_traits.hpp"
 
 namespace ft
 {
@@ -45,13 +46,15 @@ namespace ft
 			
 			explicit vector(size_type size, const T &value = T(), const Allocator &_allocator = Allocator()) : allocator(_allocator)
 			{
-				this->fill_initialize((size_type)size, (value_type&)value);
+				this->fill_initialize(size, value, true_type());
 			}
 
 			template<class InputIt>
 			vector(InputIt first, InputIt last, const Allocator &_allocator = Allocator()) : allocator(_allocator)
 			{
-				this->fill_initialize(first, last);
+				typedef typename ft::is_integral<InputIt>::type integral;
+				
+				this->fill_initialize(first, last, integral());
 			}
 
 			vector(const vector& other)
@@ -79,31 +82,15 @@ namespace ft
 
 			void			assign(size_type count, const_reference value) 
 			{
-				if (count > this->capacity())
-					this->reallocate(count);
-				this->finish = this->start;
-				for (size_type i = 0;i < count;i++)
-				{
-					this->allocator.construct(this->start + i, value);
-					this->finish++;
-				}
+				this->assign_range(count, value, true_type());
 			}
 
 			template< class InputIt >
-			void assign( InputIt first, InputIt last )
+			void			assign(InputIt first, InputIt last)
 			{
-				size_type count = last - first;
+				typedef typename ft::is_integral<InputIt>::type integral;
 				
-				if (count == 0) return ;
-				if (count > this->capacity())
-					this->reallocate(count);
-				this->finish = this->start;
-				for (size_type i = 0;i < count;i++)
-				{
-					this->allocator.construct(this->start + i, *(first + i));
-					++this->finish;
-				}
-					
+				this->assign_range(first, last, integral());
 			}
 
 			// ELEMENT ACCESS
@@ -241,15 +228,16 @@ namespace ft
 			{
 				size_type diff = pos - this->begin();
 
-				this->insert_fill_value(diff, amount, value);
+				this->insert_range(diff, amount, value, true_type());
 			}
 
 			template<class InputIt>
 			void				insert(iterator pos, InputIt first, InputIt last)
 			{
+				typedef typename ft::is_integral<InputIt>::type integral;
 				size_type diff = pos - this->begin();
-				
-				this->insert_iterator(diff, first, last);
+
+				this->insert_range(diff, first, last, integral());
 			}
 
 			iterator			erase(iterator pos)
@@ -291,7 +279,6 @@ namespace ft
 			{
 				this->swap_vector(other);
 			}
-
 		private:
 			pointer			start;
 			pointer 		finish;
@@ -310,16 +297,6 @@ namespace ft
 				this->allocator.destroy(start);
 				this->allocator.deallocate(start, this->size());
 			}
-
-			void	fill_initialize(size_type size, value_type &value)
-			{
-				this->create_storage(size);
-				for (size_type i = 0;i < size;i++)
-				{
-					this->allocator.construct(this->finish, value);
-					this->finish++;
-				}
-			}
 			
 			void	swap_pointer(pointer a, pointer b)
 			{
@@ -337,8 +314,18 @@ namespace ft
 				swap_pointer(other.end_of_storage, this->end_of_storage);
 			}
 
+			void	fill_initialize(size_type size, const value_type &value, true_type)
+			{
+				this->create_storage(size);
+				for (size_type i = 0;i < size;i++)
+				{
+					this->allocator.construct(this->finish, value);
+					this->finish++;
+				}
+			}
+
 			template<class InputIt>
-			void	fill_initialize(InputIt first, InputIt last)
+			void	fill_initialize(InputIt first, InputIt last, false_type)
 			{
 				this->create_storage(last - first);
 				for (InputIt it = first;it != last;it++)
@@ -417,7 +404,7 @@ namespace ft
 				++this->finish;
 			}
 
-			void	insert_fill_value(size_type pos, size_type amount, const_reference value)
+			void	insert_range(size_type pos, size_type amount, const_reference value, true_type)
 			{
 				if (amount == 0) return ;
 				if (capacity() - size() < amount)
@@ -427,7 +414,7 @@ namespace ft
 			}
 
 			template<class InputIt>
-			void	insert_iterator(size_type pos, InputIt first, InputIt last)
+			void	insert_range(size_type pos, InputIt first, InputIt last, false_type)
 			{
 				size_type range_size = last - first;
 
@@ -436,6 +423,35 @@ namespace ft
 					this->reallocate(this->size() + range_size);
 				for (InputIt it = first;it != last;++it)
 					this->insert_value(pos, *it);
+			}
+
+			void	assign_range(size_type count, const_reference value, true_type)
+			{
+				if (count == 0) return ;
+				if (count > this->capacity())
+					this->reallocate(count);
+				this->finish = this->start;
+				for (size_type i = 0;i < count;i++)
+				{
+					this->allocator.construct(this->start + i, value);
+					this->finish++;
+				}
+			}
+
+			template<class InputIt>
+			void	assign_range(InputIt first, InputIt last, false_type)
+			{
+				size_type count = last - first;
+
+				if (count == 0) return ;
+				if (count > this->capacity())
+					this->reallocate(count);
+				this->finish = this->start;
+				for (size_type i = 0;i < count;i++)
+				{
+					this->allocator.construct(this->start + i, *(first + i));
+					++this->finish;
+				}
 			}
 
 			void	erase_value(size_type pos)
