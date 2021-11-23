@@ -1,6 +1,6 @@
 NAME			= ft
 TEST_NAME		= std
-SRCS_PATH		= ./src/
+SRCS_PATH		= ./srcs/
 OBJS_PATH		= ./objs/
 OBJS_TEST_PATH	= ./objs_test/
 SRCSC			= main.cpp
