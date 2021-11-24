@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:43:47 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/23 06:46:43 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/24 11:00:12 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <memory>
 #include <exception>
 #include <stdexcept>
+#include <cmath>
 #include "iterator.hpp"
 #include "algorithm.hpp"
 #include "type_traits.hpp"
@@ -35,7 +36,7 @@ namespace ft
 			typedef typename allocator_type::pointer					pointer;
 			typedef typename allocator_type::const_pointer				const_pointer;
 			typedef ft::normal_iterator<pointer, vector> 				iterator;
-			typedef ft::normal_iterator<const_pointer, vector> 			const_iterator;
+			typedef ft::normal_iterator<const_pointer, vector>			const_iterator;
 			typedef ft::reverse_iterator<iterator>						reverse_iterator;
 			typedef ft::reverse_iterator<const_iterator>				const_reverse_iterator;
 		public:
@@ -59,7 +60,8 @@ namespace ft
 
 			vector(const vector& other)
 			{
-				this->copy(other, false);
+				if (*this != other)
+					this->copy(other, false);
 			}
 
 			~vector(void)
@@ -74,7 +76,7 @@ namespace ft
 
 			vector	&		operator=(const vector &other)
 			{
-				if (this == &other)
+				if (*this == other)
 					return (*this);
 				this->copy(other, true);
 				return (*this);
@@ -198,7 +200,7 @@ namespace ft
 			void	reserve(size_type new_cap)
 			{
 				if (new_cap > this->max_size())
-					throw std::length_error("vector: length error");
+					throw std::length_error("vector::reserve");
 				if (capacity() < new_cap)
 					reallocate(new_cap);
 			}
@@ -219,7 +221,7 @@ namespace ft
 			iterator			insert(iterator pos, const T &value)
 			{
 				size_type diff = pos - this->begin();
-
+				
 				this->insert_value(diff, value);
 				return (this->begin() + diff);
 			}
@@ -227,6 +229,8 @@ namespace ft
 			void				insert(iterator pos, size_type amount, const_reference value)
 			{
 				size_type diff = pos - this->begin();
+
+				if (amount == 0) return ;
 
 				this->insert_range(diff, amount, value, true_type());
 			}
@@ -256,7 +260,7 @@ namespace ft
 			void				push_back(const_reference value)
 			{
 				if (this->finish == this->end_of_storage)
-					this->reallocate(this->size() + 1);
+					this->reallocate(this->new_size());
 				this->allocator.construct(this->finish, value);
 				++this->finish;
 			}
@@ -269,7 +273,7 @@ namespace ft
 
 			void			resize(size_type count, value_type value = value_type())
 			{
-				if (this->size() < count)
+				if (count < this->size())
 					this->reallocate(count);
 				if (count > this->size())
 					this->reallocate(count, value);
@@ -277,6 +281,8 @@ namespace ft
 
 			void			swap(vector &other)
 			{
+				if (*this == other) return ;
+				
 				this->swap_vector(other);
 			}
 		private:
@@ -294,24 +300,23 @@ namespace ft
 
 			void	delete_storage(void)
 			{
-				this->allocator.destroy(start);
 				this->allocator.deallocate(start, this->size());
 			}
 			
-			void	swap_pointer(pointer a, pointer b)
+			void	swap_pointer(pointer *a, pointer *b)
 			{
 				pointer tmp;
 
-				tmp = a;
-				a = b;
-				b = tmp;
+				tmp = *a;
+				*a = *b;
+				*b = tmp;
 			}
 
 			void	swap_vector(vector &other)
 			{
-				swap_pointer(other.start, this->start);
-				swap_pointer(other.finish, this->finish);
-				swap_pointer(other.end_of_storage, this->end_of_storage);
+				swap_pointer(&other.start, &this->start);
+				swap_pointer(&other.finish, &this->finish);
+				swap_pointer(&other.end_of_storage, &this->end_of_storage);
 			}
 
 			void	fill_initialize(size_type size, const value_type &value, true_type)
@@ -331,17 +336,21 @@ namespace ft
 				for (InputIt it = first;it != last;it++)
 					this->allocator.construct(this->finish++, *it);
 			}
-
+			
 			void	reallocate(size_type size)
 			{
+				// size, take 
 				size_type		current_size = this->size();
 				pointer 		_start 		= this->allocator.allocate(size);
 				pointer 		_finish		= _start;
-
+				
 				for (size_type i = 0;i < current_size;i++)
 				{
-					this->allocator.construct(_finish, *(this->start + i));
-					++_finish;
+					if (i < size)
+					{
+						this->allocator.construct(_finish, *(this->start + i));
+						++_finish;
+					}
 				}
 				this->delete_storage();
 				this->start = _start;
@@ -371,10 +380,10 @@ namespace ft
 
 			void	copy(const vector &other, bool del)
 			{
-				pointer 	_start = this->allocator.allocate(other.capacity());
+				pointer 	_start = this->allocator.allocate(other.size());
 				pointer 	_finish = _start;
 
-				for (size_type i = 0;i < other.capacity();i++)
+				for (size_type i = 0;i < other.size();i++)
 				{
 					this->allocator.construct(_start + i, other[i]);
 					_finish++;
@@ -383,7 +392,14 @@ namespace ft
 					this->delete_storage();
 				this->start = _start;
 				this->finish = _finish;
-				this->end_of_storage = _start + other.capacity();
+				this->end_of_storage = _finish;
+			}
+
+			size_t	new_size()
+			{
+				size_t size = this->size();
+
+				return (size == 0 ? 1 : size * 2);
 			}
 
 			void	insert_value(size_type pos, const_reference value)
@@ -392,7 +408,7 @@ namespace ft
 				value_type	tmp2;
 
 				if (this->finish == this->end_of_storage)
-					this->reallocate(this->size() + 1);
+					this->reallocate(new_size());
 				tmp = *(this->start + pos);
 				this->allocator.construct(this->start + pos, value);
 				for (size_type i = pos + 1;i < this->size() + 1;i++)
@@ -407,8 +423,6 @@ namespace ft
 			void	insert_range(size_type pos, size_type amount, const_reference value, true_type)
 			{
 				if (amount == 0) return ;
-				if (capacity() - size() < amount)
-					this->reallocate(this->size() + amount);
 				for (size_type i = 0;i < amount;i++)
 					this->insert_value(pos, value);
 			}
@@ -419,10 +433,8 @@ namespace ft
 				size_type range_size = last - first;
 
 				if (range_size == 0) return ;
-				if (capacity() - size() < range_size)
-					this->reallocate(this->size() + range_size);
 				for (InputIt it = first;it != last;++it)
-					this->insert_value(pos, *it);
+					this->insert_value(pos, *(first + (last - it - 1)));
 			}
 
 			void	assign_range(size_type count, const_reference value, true_type)
@@ -513,6 +525,12 @@ namespace ft
 	bool	operator>=(const ft::vector<T, Allocator>& a, const ft::vector<T, Allocator>& b)
 	{
 		return (!(a < b));
+	}
+
+	template< class T, class Alloc >
+	void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs)
+	{
+		lhs.swap(rhs);
 	}
 }
 

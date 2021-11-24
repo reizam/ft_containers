@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/22 00:15:38 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/23 04:40:38 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/24 06:02:12 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define FT_ITERATOR_HPP
 
 #include <cstddef>
+#include "type_traits.hpp"
 
 namespace ft
 {
@@ -82,7 +83,7 @@ namespace ft
 			typedef typename traits_type::reference			reference;
 
 			reverse_iterator(void) : current() {}
-			
+
 			explicit reverse_iterator(iterator_type x) : current(x) {}
 
 			template<class U>
@@ -158,6 +159,8 @@ namespace ft
 			}
 	};
 
+	using ft::iterator_traits;
+ 	using ft::iterator;
 	template<typename Iterator, typename Container>
 	class	normal_iterator
 	{
@@ -174,6 +177,9 @@ namespace ft
 			typedef typename traits_type::reference			reference;
 
 		normal_iterator() : current(Iterator()) {}
+		
+		template<typename Iter>
+        normal_iterator(const normal_iterator<Iter, Container> &i) : current(i.base()) {}
 
 		normal_iterator(const Iterator& i) : current(i) {}
 		
