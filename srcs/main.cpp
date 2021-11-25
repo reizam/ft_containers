@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:47:31 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/24 09:46:58 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/25 06:12:14 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,60 +20,38 @@
 #define TESTED_NAMESPACE ft
 # include "vector.hpp"
 # include "iterator.hpp"
-# include <algorithm>
 #else
 # include <vector>
 # include <iterator>
 #define TESTED_NAMESPACE std
 #endif
 
-#define TESTED_TYPE int
+#ifdef FT_VERSION
+class foo {
+	public:
+		foo(void) { };
+		~foo(void) { };
+		void m(void) { std::cout << "foo::m called [" << this->value << "]" << std::endl; };
+		void m(void) const { std::cout << "foo::m const called [" << this->value << "]" << std::endl; };
+		foo &operator=(int src) { this->value = src; return *this; };
+		int getValue(void) const { return this->value; };
+	private:
+		int	value;
+};
+
+std::ostream	&operator<<(std::ostream &o, foo const &bar) {
+	o << bar.getValue();
+	return o;
+}
+
+#endif
+
+#define TESTED_TYPE foo
 
 #define T_SIZE_TYPE typename TESTED_NAMESPACE::vector<T>::size_type
 
 #include <list>
 #include <iostream>
-
-
-// void	test_vector()
-// {
-// 	TESTED_NAMESPACE::vector<int> vector;
-// 	TESTED_NAMESPACE::vector<int> vector2(2);
-
-// 	vector.push_back(2);
-// 	vector.push_back(2);
-// 	vector.erase(vector.begin(), vector.end());
-// 	vector.push_back(5);
-// 	vector.push_back(7);
-// 	vector.push_back(7);
-// 	vector.push_back(7);
-// 	vector.push_back(-5);
-// 	vector.insert(vector.begin(), 2, 5);
-// 	vector.pop_back();
-// 	vector.resize((size_t)10);
-// 	vector.reserve(100);
-// 	vector.erase(vector.begin() + 2, vector.end() - 1);
-// 	vector.assign(1000, 0);
-
-	
-// 	std::cout << "empty: " << (vector.empty() ? "yes" : "no") << std::endl;
-// 	std::cout << "size: " <<  vector.size() << std::endl;
-// 	std::cout << "max_size: " << vector.max_size() << std::endl; 
-// 	std::cout << "capacity: " << vector.capacity() << std::endl;
-// 	std::cout << "front: " << vector.front() << std::endl;
-// 	std::cout << "back: " << vector.back() << std::endl;
-
-// 	std::cout << "------ CONTENT -------" << std::endl;
-
-// 	TESTED_NAMESPACE::vector<int>::iterator it = vector.begin();
-// 	TESTED_NAMESPACE::vector<int>::iterator ite = vector.end();
-
-// 	while (it != ite)
-// 	{
-// 		std::cout << *it << std::endl;
-// 		it++;
-// 	}	
-// }
 
 template <typename T>
 void	printSize(TESTED_NAMESPACE::vector<T> const &vct, bool print_content = true)
@@ -82,7 +60,7 @@ void	printSize(TESTED_NAMESPACE::vector<T> const &vct, bool print_content = true
 	const T_SIZE_TYPE capacity = vct.capacity();
 	const std::string isCapacityOk = (capacity >= size) ? "OK" : "KO";
 	// Cannot limit capacity's max value because it's implementation dependent
-
+	
 	std::cout << "size: " << size << std::endl;
 	std::cout << "capacity: " << isCapacityOk << std::endl;
 	std::cout << "max_size: " << vct.max_size() << std::endl;
@@ -97,60 +75,62 @@ void	printSize(TESTED_NAMESPACE::vector<T> const &vct, bool print_content = true
 	std::cout << "###############################################" << std::endl;
 }
 
-void	checkErase(TESTED_NAMESPACE::vector<TESTED_TYPE> const &vct,
-					TESTED_NAMESPACE::vector<TESTED_TYPE>::const_iterator const &it)
+template <typename Ite_1, typename Ite_2>
+void ft_eq_ope(const Ite_1 &first, const Ite_2 &second, const bool redo = 1)
 {
-	static int i = 0;
-	std::cout << "[" << i++ << "] " << "erase: " << it - vct.begin() << std::endl;
-	printSize(vct);
-}
-
-void	prepost_incdec(TESTED_NAMESPACE::vector<TESTED_TYPE> &vct)
-{
-	TESTED_NAMESPACE::vector<TESTED_TYPE>::iterator it = vct.begin();
-	TESTED_NAMESPACE::vector<TESTED_TYPE>::iterator it_tmp;
-
-	std::cout << "Pre inc" << std::endl;
-	it_tmp = ++it;
-	std::cout << *it_tmp << " | " << *it << std::endl;
-
-	std::cout << "Pre dec" << std::endl;
-	it_tmp = --it;
-	std::cout << *it_tmp << " | " << *it << std::endl;
-
-	std::cout << "Post inc" << std::endl;
-	it_tmp = it++;
-	std::cout << *it_tmp << " | " << *it << std::endl;
-
-	std::cout << "Post dec" << std::endl;
-	it_tmp = it--;
-	std::cout << *it_tmp << " | " << *it << std::endl;
-	std::cout << "###############################################" << std::endl;
+	std::cout << "-------------------\n";
+	std::cout << (first < second) << std::endl;
+	std::cout << (first <= second) << std::endl;
+	std::cout << (first > second) << std::endl;
+	std::cout << (first >= second) << std::endl;
+	if (redo)
+		ft_eq_ope(second, first, 0);
 }
 
 void	test(void)
 {
-	std::list<TESTED_TYPE> lst;
-	std::list<TESTED_TYPE>::iterator lst_it;
-	
-	for (int i = 1; i < 5; ++i)
-		lst.push_back(i * 3);
+	const int size = 5;
+	TESTED_NAMESPACE::vector<TESTED_TYPE> vct(size);
+	TESTED_NAMESPACE::vector<TESTED_TYPE>::reverse_iterator it_0(vct.rbegin());
+	TESTED_NAMESPACE::vector<TESTED_TYPE>::reverse_iterator it_1(vct.rend());
+	TESTED_NAMESPACE::vector<TESTED_TYPE>::reverse_iterator it_mid;
 
-	TESTED_NAMESPACE::vector<TESTED_TYPE> vct(lst.begin(), lst.end());
-	printSize(vct);
+	TESTED_NAMESPACE::vector<TESTED_TYPE>::const_reverse_iterator cit_0 = vct.rbegin();
+	TESTED_NAMESPACE::vector<TESTED_TYPE>::const_reverse_iterator cit_1;
+	TESTED_NAMESPACE::vector<TESTED_TYPE>::const_reverse_iterator cit_mid;
 
-	lst_it = lst.begin();
-	for (int i = 1; lst_it != lst.end(); ++i)
-		*lst_it++ = i * 5;
-	vct.assign(lst.begin(), lst.end());
-	printSize(vct);
+	for (int i = size; it_0 != it_1; --i)
+		*it_0++ = i;
+	printSize(vct, 1);
+	it_0 = vct.rbegin();
+	cit_1 = vct.rend();
+	it_mid = it_0 + 3;
+	cit_mid = it_0 + 3; cit_mid = cit_0 + 3; cit_mid = it_mid;
 
-	vct.insert(vct.end(), lst.rbegin(), lst.rend());
-	printSize(vct);
+	std::cout << std::boolalpha;
+	std::cout << ((it_0 + 3 == cit_0 + 3) && (cit_0 + 3 == it_mid)) << std::endl;
+
+	std::cout << "\t\tft_eq_ope:" << std::endl;
+	// regular it
+	ft_eq_ope(it_0 + 3, it_mid);
+	ft_eq_ope(it_0, it_1);
+	ft_eq_ope(it_1 - 3, it_mid);
+	// const it
+	ft_eq_ope(cit_0 + 3, cit_mid);
+	ft_eq_ope(cit_0, cit_1);
+	ft_eq_ope(cit_1 - 3, cit_mid);
+	// both it
+	ft_eq_ope(it_0 + 3, cit_mid);
+	ft_eq_ope(it_mid, cit_0 + 3);
+	ft_eq_ope(it_0, cit_1);
+	ft_eq_ope(it_1, cit_0);
+	ft_eq_ope(it_1 - 3, cit_mid);
+	ft_eq_ope(it_mid, cit_1 - 3);
 }
 
-int		main(void)
+
+int main(void)
 {
-	
+	test();
 	return (0);
 }

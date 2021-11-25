@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 04:06:24 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/24 10:01:50 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/25 01:57:58 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ namespace ft
 	{
 		while (first1 != last1)
 		{
-			if (*first1 != *first2)
+			if (!(*first1 == *first2))
 				return (false);
 			++first2;
 			++first1;
@@ -85,8 +85,5 @@ namespace ft
 		return (it1_size < it2_size);
 	}
 };
-
-
-// add lexicographical compare, equal
 
 #endif

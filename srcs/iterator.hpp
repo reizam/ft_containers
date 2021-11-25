@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/22 00:15:38 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/24 06:02:12 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/25 06:36:37 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,8 +85,8 @@ namespace ft
 			reverse_iterator(void) : current() {}
 
 			explicit reverse_iterator(iterator_type x) : current(x) {}
-
-			template<class U>
+			
+			template<typename U>
 			reverse_iterator(const reverse_iterator<U> &other) : current(other.base()) {}
 
 			iterator_type base(void) const
@@ -105,7 +105,7 @@ namespace ft
 				 return (&(operator*()));
 			}
 
-			reverse_iterator&	operator++(void)
+			reverse_iterator&	operator++()
 			{
 				--this->current;
 				return (*this);
@@ -113,12 +113,10 @@ namespace ft
 
 			reverse_iterator	operator++(int)
 			{
-				Iterator tmp = *this;
-				--this->current;
-				return tmp;
+				return reverse_iterator(current--);
 			}
 
-			reverse_iterator&	operator--(void)
+			reverse_iterator&	operator--()
 			{
 				++this->current;
 				return (*this);
@@ -126,9 +124,7 @@ namespace ft
 
 			reverse_iterator	operator--(int)
 			{
-				Iterator tmp = *this;
-				++this->current;
-				return tmp;
+				return (reverse_iterator(current++));
 			}
 
 			reverse_iterator	operator+(difference_type n) const
@@ -162,7 +158,7 @@ namespace ft
 	using ft::iterator_traits;
  	using ft::iterator;
 	template<typename Iterator, typename Container>
-	class	normal_iterator
+	class	normal_iterator 
 	{
 		protected:
 			Iterator current;
@@ -217,7 +213,7 @@ namespace ft
 
 		reference	operator[](difference_type n) const
 		{
-			return (current[n]);
+			return *(current + n);
 		}
 
 		normal_iterator&	operator+=(difference_type n)
@@ -226,7 +222,7 @@ namespace ft
 			return (*this);
 		}
 
-		normal_iterator	operator+(difference_type n)
+		normal_iterator	operator+(difference_type n) const
 		{
 			return (normal_iterator(current + n));
 		}
@@ -237,7 +233,7 @@ namespace ft
 			return (*this);
 		}
 
-		normal_iterator	operator-(difference_type n)
+		normal_iterator	operator-(difference_type n) const
 		{
 			return (normal_iterator(current - n));
 		}
@@ -323,13 +319,13 @@ namespace ft
 	template<typename Iterator>
 	inline typename reverse_iterator<Iterator>::difference_type operator-(const reverse_iterator<Iterator>& a, const reverse_iterator<Iterator>& b)
 	{
-		return (a.base() - b.base());
+		return (b.base() - a.base());
 	}
 
 	template<typename Iterator_A, typename Iterator_B>
 	inline typename reverse_iterator<Iterator_A>::difference_type operator-(const reverse_iterator<Iterator_A>& a, const reverse_iterator<Iterator_B>& b)
 	{
-		return (a.base() - b.base());
+		return (b.base() - a.base());
 	}
 
 	template<typename Iterator>
@@ -425,7 +421,7 @@ namespace ft
 	template<typename Iterator, typename Container>
 	inline normal_iterator<Iterator, Container>	operator+(typename normal_iterator<Iterator, Container>::difference_type n, const normal_iterator<Iterator, Container>& a)
 	{
-		return normal_iterator<Iterator, Container>(a.base() - n);
+		return normal_iterator<Iterator, Container>(a.base() + n);
 	}
 };
 

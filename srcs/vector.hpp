@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:43:47 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/24 11:00:12 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/25 07:35:36 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 #include <memory>
 #include <exception>
 #include <stdexcept>
-#include <cmath>
 #include "iterator.hpp"
 #include "algorithm.hpp"
 #include "type_traits.hpp"
@@ -170,15 +169,25 @@ namespace ft
 			{
 				return const_iterator(this->finish);
 			}
+			
+			reverse_iterator		rend()
+			{
+				return reverse_iterator(begin());
+			}
+			
+			const_reverse_iterator 	rend() const
+			{
+				return const_reverse_iterator(begin());
+			}
 
 			reverse_iterator 	rbegin() 
 			{
 				return reverse_iterator(end());
 			}
 
-			reverse_iterator 	rend() 
+			const_reverse_iterator 	rbegin() const
 			{
-				return reverse_iterator(begin());
+				return const_reverse_iterator(end());
 			}
 
 			// CAPACITY
@@ -274,9 +283,9 @@ namespace ft
 			void			resize(size_type count, value_type value = value_type())
 			{
 				if (count < this->size())
-					this->reallocate(count);
-				if (count > this->size())
-					this->reallocate(count, value);
+					this->finish = this->start + count;
+				else if (count > this->size())
+					this->reallocate_and_set_finish(new_size(count), count, value);
 			}
 
 			void			swap(vector &other)
@@ -300,7 +309,7 @@ namespace ft
 
 			void	delete_storage(void)
 			{
-				this->allocator.deallocate(start, this->size());
+				this->allocator.deallocate(this->start, this->capacity());
 			}
 			
 			void	swap_pointer(pointer *a, pointer *b)
@@ -339,7 +348,6 @@ namespace ft
 			
 			void	reallocate(size_type size)
 			{
-				// size, take 
 				size_type		current_size = this->size();
 				pointer 		_start 		= this->allocator.allocate(size);
 				pointer 		_finish		= _start;
@@ -348,7 +356,8 @@ namespace ft
 				{
 					if (i < size)
 					{
-						this->allocator.construct(_finish, *(this->start + i));
+						*_finish = *(this->start + i);
+						// this->allocator.construct(_finish, *(this->start + i));
 						++_finish;
 					}
 				}
@@ -366,16 +375,25 @@ namespace ft
 
 				for (size_type i = 0;i < size;i++)
 				{
-					if (i < before_size)
-						this->allocator.construct(_finish, *(this->start + i));
-					else
-						this->allocator.construct(_finish, value);
+					*_finish = i < before_size ? *(this->start + i) : value;
 					++_finish;
 				}
 				this->delete_storage();
 				this->start = _start;
 				this->finish = _finish;
 				this->end_of_storage = _start + size;
+			}
+
+			void	reallocate_and_set_finish(size_type size, size_type finish_index)
+			{
+				this->reallocate(size);
+				this->finish = this->start + finish_index;
+			}
+
+			void	reallocate_and_set_finish(size_type size, size_type finish_index, T value)
+			{
+				this->reallocate(size, value);
+				this->finish = this->start + finish_index;
 			}
 
 			void	copy(const vector &other, bool del)
@@ -402,6 +420,13 @@ namespace ft
 				return (size == 0 ? 1 : size * 2);
 			}
 
+			size_t	new_size(size_t n)
+			{
+				size_t size = this->size();
+
+				return (n < size * 2 ? size * 2 : n);
+			}
+
 			void	insert_value(size_type pos, const_reference value)
 			{
 				value_type	tmp;
@@ -410,11 +435,11 @@ namespace ft
 				if (this->finish == this->end_of_storage)
 					this->reallocate(new_size());
 				tmp = *(this->start + pos);
-				this->allocator.construct(this->start + pos, value);
+				*(this->start + pos) = value;
 				for (size_type i = pos + 1;i < this->size() + 1;i++)
 				{
 					tmp2 = *(this->start + i);
-					this->allocator.construct(this->start + i, tmp);
+					*(this->start + i) = tmp;
 					tmp = tmp2;
 				}
 				++this->finish;
@@ -423,6 +448,9 @@ namespace ft
 			void	insert_range(size_type pos, size_type amount, const_reference value, true_type)
 			{
 				if (amount == 0) return ;
+				
+				if (amount > this->capacity() - this->size())
+					this->reallocate_and_set_finish(new_size(amount + this->size()), this->size(), value);
 				for (size_type i = 0;i < amount;i++)
 					this->insert_value(pos, value);
 			}
@@ -433,6 +461,9 @@ namespace ft
 				size_type range_size = last - first;
 
 				if (range_size == 0) return ;
+				
+				if (range_size > this->capacity() - this->size())
+					this->reallocate_and_set_finish(new_size(range_size + this->size()), this->size());
 				for (InputIt it = first;it != last;++it)
 					this->insert_value(pos, *(first + (last - it - 1)));
 			}
@@ -440,12 +471,13 @@ namespace ft
 			void	assign_range(size_type count, const_reference value, true_type)
 			{
 				if (count == 0) return ;
+				
 				if (count > this->capacity())
 					this->reallocate(count);
 				this->finish = this->start;
 				for (size_type i = 0;i < count;i++)
 				{
-					this->allocator.construct(this->start + i, value);
+					*(this->start + i) = value;
 					this->finish++;
 				}
 			}
@@ -461,7 +493,7 @@ namespace ft
 				this->finish = this->start;
 				for (size_type i = 0;i < count;i++)
 				{
-					this->allocator.construct(this->start + i, *(first + i));
+					*(this->start + i) = *(first + i);
 					++this->finish;
 				}
 			}
