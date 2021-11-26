@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/22 00:15:38 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/25 06:36:37 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/26 02:24:25 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include "type_traits.hpp"
+#include <iostream>
 
 namespace ft
 {
@@ -113,7 +114,7 @@ namespace ft
 
 			reverse_iterator	operator++(int)
 			{
-				return reverse_iterator(current--);
+				return reverse_iterator<Iterator>(current--);
 			}
 
 			reverse_iterator&	operator--()
@@ -124,12 +125,12 @@ namespace ft
 
 			reverse_iterator	operator--(int)
 			{
-				return (reverse_iterator(current++));
+				return (reverse_iterator<Iterator>(current++));
 			}
 
 			reverse_iterator	operator+(difference_type n) const
 			{
-				return (reverse_iterator(current - n));
+				return (reverse_iterator<Iterator>(current - n));
 			}
 
 			reverse_iterator&	operator+=(difference_type n)
@@ -140,7 +141,7 @@ namespace ft
 
 			reverse_iterator	operator-(difference_type n) const
 			{
-				return (reverse_iterator(current + n));
+				return (reverse_iterator<Iterator>(current + n));
 			}
 
 			reverse_iterator&	operator-=(difference_type n)
@@ -250,34 +251,34 @@ namespace ft
 		return (a.base() == b.base());
 	}
 
+		template<typename Iterator>
+	inline bool	operator<(const reverse_iterator<Iterator>& a, const reverse_iterator<Iterator>& b)
+	{
+		return (b.base() < a.base());
+	}
+
 	template<typename Iterator>
 	inline bool	operator!=(const reverse_iterator<Iterator>& a, const reverse_iterator<Iterator>& b)
 	{
-		return (a.base() != b.base());
+		return (!(a == b));
 	}
 
 	template<typename Iterator>
 	inline bool	operator>=(const reverse_iterator<Iterator>& a, const reverse_iterator<Iterator>& b)
 	{
-		return (a.base() >= b.base());
+		return (!(a < b));
 	}
 
 	template<typename Iterator>
 	inline bool	operator<=(const reverse_iterator<Iterator>& a, const reverse_iterator<Iterator>& b)
 	{
-		return (a.base() <= b.base());
+		return (!(b < a));
 	}
 
 	template<typename Iterator>
 	inline bool	operator>(const reverse_iterator<Iterator>& a, const reverse_iterator<Iterator>& b)
 	{
-		return (a.base() > b.base());
-	}
-
-	template<typename Iterator>
-	inline bool	operator<(const reverse_iterator<Iterator>& a, const reverse_iterator<Iterator>& b)
-	{
-		return (a.base() < b.base());
+		return (b < a);
 	}
 
 	template<typename Iterator_A, typename Iterator_B>
@@ -287,33 +288,33 @@ namespace ft
 	}
 
 	template<typename Iterator_A, typename Iterator_B>
+	inline bool	operator<(const reverse_iterator<Iterator_A>& a, const reverse_iterator<Iterator_B>& b)
+	{
+		return (b.base() < a.base());
+	}
+
+	template<typename Iterator_A, typename Iterator_B>
 	inline bool	operator!=(const reverse_iterator<Iterator_A>& a, const reverse_iterator<Iterator_B>& b)
 	{
-		return (a.base() != b.base());
+		return (!(a == b));
 	}
 
 	template<typename Iterator_A, typename Iterator_B>
 	inline bool	operator>=(const reverse_iterator<Iterator_A>& a, const reverse_iterator<Iterator_B>& b)
 	{
-		return (a.base() >= b.base());
+		return (!(a < b));
 	}
 
 	template<typename Iterator_A, typename Iterator_B>
 	inline bool	operator<=(const reverse_iterator<Iterator_A>& a, const reverse_iterator<Iterator_B>& b)
 	{
-		return (a.base() <= b.base());
+		return (!(b < a));
 	}
 
 	template<typename Iterator_A, typename Iterator_B>
 	inline bool	operator>(const reverse_iterator<Iterator_A>& a, const reverse_iterator<Iterator_B>& b)
 	{
-		return (a.base() > b.base());
-	}
-
-	template<typename Iterator_A, typename Iterator_B>
-	inline bool	operator<(const reverse_iterator<Iterator_A>& a, const reverse_iterator<Iterator_B>& b)
-	{
-		return (a.base() < b.base());
+		return (b < a);
 	}
 
 	template<typename Iterator>

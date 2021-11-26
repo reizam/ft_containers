@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:47:31 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/25 06:12:14 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/26 02:07:51 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,9 +116,11 @@ void	test(void)
 	ft_eq_ope(it_0, it_1);
 	ft_eq_ope(it_1 - 3, it_mid);
 	// const it
+	std::cout << "-------\n";
 	ft_eq_ope(cit_0 + 3, cit_mid);
 	ft_eq_ope(cit_0, cit_1);
 	ft_eq_ope(cit_1 - 3, cit_mid);
+	std::cout << "-------\n";
 	// both it
 	ft_eq_ope(it_0 + 3, cit_mid);
 	ft_eq_ope(it_mid, cit_0 + 3);
