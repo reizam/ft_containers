@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/26 06:19:28 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/26 09:45:28 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/26 15:12:56 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,10 +58,10 @@ namespace ft
 				this->create_storage(first, last, integral());
 			}
 
-			vector(const vector& other)
+			vector(const vector& other) : allocator()
 			{
 				if (*this != other)
-					this->copy_init(other, false);
+					this->copy_init(other);
 			}
 
 			~vector(void)
@@ -79,6 +79,19 @@ namespace ft
 				if (*this != other)
 					this->copy(other);
 				return (*this);
+			}
+
+			void			assign(size_type count, const_reference value) 
+			{
+				this->assign_dispatch(count, value, true_type());
+			}
+
+			template<class InputIt>
+			void			assign(InputIt first, InputIt last)
+			{
+				typedef typename ft::is_integral<InputIt>::type integral;
+				
+				this->assign_dispatch(first, last, integral());
 			}
 
 			// ITERATORS
@@ -233,8 +246,7 @@ namespace ft
 
 			iterator			insert(iterator pos, const T &value)
 			{
-				this->realloc_insert(pos, value);
-				return (this->begin() + (pos - this->begin()));
+				return (this->realloc_insert(pos, value));
 			}
 
 			void				insert(iterator pos, size_type amount, const_reference value)
@@ -263,9 +275,9 @@ namespace ft
 			void			resize(size_type count, value_type value = value_type())
 			{
 				if (count < this->size())
-					this->erase_at_end(this->begin() + count);
+					this->erase_at_end(&*(this->begin() + count));
 				else if (count > this->size())
-					this->realloc_resize_fill(this->end(), count, value);
+					this->realloc_resize_fill(count, value);
 			}
 
 			void			swap(vector &other)
@@ -289,22 +301,19 @@ namespace ft
 				
 				void	copy_init(const vector &other)
 				{
-					pointer 	_start = this->allocator.allocate(other.size());
-					pointer 	_finish = _start;
-
-					_finish = ft::uninitialized_copy(other.begin(), other.end(), _start);
-					this->start = _start;
-					this->finish = _finish;
-					this->end_of_storage = _finish;
+					this->create_storage(other.size());
+					for (size_type i = 0;i < other.size();i++)
+						this->allocator.construct(this->finish++, other[i]);
 				}
 
 				void	copy(const vector &other)
 				{
-					pointer 	_start = this->allocator.allocate(other.size());
-					pointer 	_finish = _start;
+					pointer 	_start(this->allocator.allocate(other.size()));
+					pointer 	_finish(_start);
 
+					_finish = pointer();
 					_finish = ft::uninitialized_copy(other.begin(), other.end(), _start);
-					this->destroy_it(this->begin(), this->end());
+					this->destroy_it(this->start, this->finish);
 					this->deallocate(this->start, this->end_of_storage - this->start);
 					this->start = _start;
 					this->finish = _finish;
@@ -323,19 +332,15 @@ namespace ft
 				template<class InputIt>
 				void	create_storage(InputIt first, InputIt last, false_type)
 				{
-					size_type size = last - first;
-					
-					this->start = this->allocator.allocate(size);
-					for (size_type i = 0;first != last;++first, i++)
-						this->allocator.construct(this->start + i, *first);
-					this->finish = this->start + size;
-					this->end_of_storage = this->start + size;
+					this->create_storage(last - first);
+					for (InputIt it = first;it != last;it++)
+						this->allocator.construct(this->finish++, *it);
 				}
 
 				void	delete_storage()
 				{
-					this->deallocate(this->start, this->end_of_storage - this->start);
 					this->destroy_it(this->start, this->finish);
+					this->deallocate(this->start, this->end_of_storage - this->start);
 				}
 
 				void	deallocate(pointer p, size_t size)
@@ -359,11 +364,11 @@ namespace ft
 
 				size_t	new_size(size_t n)
 				{
-					size_type	capacity = this->capacity();
-
-					if (n <= capacity)
-						return (capacity);
-					return (n);
+					size_t size = this->size();
+					
+					if (this->capacity() >= n)
+						return (this->capacity());
+					return (n < size * 2 ? size * 2 : n);
 				}
 
 				void	realloc_reserve(size_type count)
@@ -380,7 +385,7 @@ namespace ft
 					this->end_of_storage = _start + count;
 				}
 
-				void	realloc_insert(iterator pos, const_reference value)
+				iterator	realloc_insert(iterator pos, const_reference value)
 				{
 					size_type	size = new_size();
 					size_type	_pos = pos - this->begin();
@@ -397,6 +402,7 @@ namespace ft
 					this->start = _start;
 					this->finish = _finish;
 					this->end_of_storage = _start + size;
+					return (this->begin() + _pos);
 				}
 
 				template<class InputIt>
@@ -405,9 +411,20 @@ namespace ft
 					this->realloc_insert_range(pos, first, last);
 				}
 
-				void	insert_dispatch(iterator pos, size_type count, const_reference value, false_type)
+				void	insert_dispatch(iterator pos, size_type count, const_reference value, true_type)
 				{
 					this->realloc_insert_fill(pos, count, value);
+				}
+
+				void	assign_dispatch(size_type count, const_reference value, true_type)
+				{
+					this->assign_fill(count, value);
+				}
+
+				template<class InputIt>
+				void	assign_dispatch(InputIt first, InputIt last, false_type)
+				{
+					this->assign_range(first, last);
 				}
 
 				template<class InputIt>
@@ -419,12 +436,11 @@ namespace ft
 					size_type		size = new_size(diff + this->size());
 					pointer			_start(this->allocator.allocate(size));
 					pointer			_finish(_start);
-
-					for (; first != last;++first)
-						this->allocator.construct(_start + (first - this->begin()), *first);
+					
 					_finish = pointer();
 					_finish = ft::uninitialized_copy(this->start, pos.base(), _start);
-					_finish += diff;
+					for (; first != last;++first)
+						this->allocator.construct(_finish++, *first);
 					_finish = ft::uninitialized_copy(pos.base(), this->finish, _finish);
 					this->destroy_it(this->start, this->finish);
 					this->deallocate(this->start, this->end_of_storage - this->start);
@@ -437,7 +453,7 @@ namespace ft
 				{
 					if (count == 0) return ;
 					
-					size_type	_pos = pos - this->begin(); 
+					size_type	_pos = pos - this->begin();
 					size_type	size = new_size(count + this->size());
 					pointer		_start(this->allocator.allocate(size));
 					pointer		_finish(_start);
@@ -455,26 +471,62 @@ namespace ft
 					this->end_of_storage = _start + size;
 				}
 
-				void	realloc_resize_fill(iterator pos, size_type count, const_reference value)
+				void	realloc_resize_fill(size_type count, const_reference value)
 				{
 					if (count == 0) return ;
 					
-					size_type	_pos = pos - this->begin(); 
-					size_type	size = count;
-					pointer		_start(this->allocator.allocate(size));
+					size_type	size = this->size();
+					size_type	new_size = count < size * 2 ? size * 2 : count;
+					pointer		_start(this->allocator.allocate(new_size));
 					pointer		_finish(_start);
 
-					for (size_type i = 0;i < count;i++)
-						this->allocator.construct(_start + _pos + i, value);
 					_finish = pointer();
-					_finish = ft::uninitialized_copy(this->start, pos.base(), _start);
-					_finish += count;
-					_finish = ft::uninitialized_copy(pos.base(), this->finish, _finish);
+					_finish = ft::uninitialized_copy(this->start, this->finish, _start);
+					for (size_type i = size;i < count;i++)
+						this->allocator.construct(_finish++, value);
 					this->destroy_it(this->start, this->finish);
 					this->deallocate(this->start, this->end_of_storage - this->start);
 					this->start = _start;
 					this->finish = _finish;
-					this->end_of_storage = _start + size;
+					this->end_of_storage = _start + new_size;
+				}
+
+				void	assign_fill(size_type count, const_reference value)
+				{
+					size_type capacity = this->capacity();
+
+					if (count == 0) return ;
+					if (count > capacity)
+					{
+						this->destroy_it(this->start, this->finish);
+						this->deallocate(this->start, this->capacity());
+						this->start = this->allocator.allocate(count);
+						capacity = count;
+					}
+					this->finish = this->start;
+					this->end_of_storage = this->start + capacity;
+					for (size_type i = 0;i < count;i++)
+						this->allocator.construct(this->finish++, value);
+				}
+
+				template<class InputIt>
+				void	assign_range(InputIt first, InputIt last)
+				{
+					size_type count = last - first;
+					size_type capacity = this->capacity();
+					
+					if (first == last) return ;
+					if (count > this->capacity())
+					{
+						this->destroy_it(this->start, this->finish);
+						this->deallocate(this->start, this->capacity());
+						this->start = this->allocator.allocate(count);
+						capacity = count;
+					}
+					this->finish = this->start;
+					this->end_of_storage = this->start + capacity;
+					for (;first != last;++first)
+						this->allocator.construct(this->finish++, *first);
 				}
 
 				iterator	_erase(iterator pos)
@@ -498,7 +550,7 @@ namespace ft
 						if (last != end())
 							for (iterator it = last;it != end();++it, ++_first)
 								*_first = *it;
-						this->erase_at_end(_first);
+						this->erase_at_end(&(*_first));
 					}
 					return (first);	
 				}
