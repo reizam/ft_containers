@@ -5,13 +5,13 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/11/20 01:43:47 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/25 07:35:36 by kmazier          ###   ########.fr       */
+/*   Created: 2021/11/26 06:19:28 by kmazier           #+#    #+#             */
+/*   Updated: 2021/11/26 09:45:28 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef FT_VECTOR_HPP
-# define FT_VECTOR_HPP
+#ifndef VECTOR_HPP
+#define VECTOR_HPP
 
 #include <memory>
 #include <exception>
@@ -19,6 +19,7 @@
 #include "iterator.hpp"
 #include "algorithm.hpp"
 #include "type_traits.hpp"
+#include "common.hpp"
 
 namespace ft
 {
@@ -46,21 +47,21 @@ namespace ft
 			
 			explicit vector(size_type size, const T &value = T(), const Allocator &_allocator = Allocator()) : allocator(_allocator)
 			{
-				this->fill_initialize(size, value, true_type());
+				this->create_storage(size, value, true_type());
 			}
 
 			template<class InputIt>
 			vector(InputIt first, InputIt last, const Allocator &_allocator = Allocator()) : allocator(_allocator)
 			{
 				typedef typename ft::is_integral<InputIt>::type integral;
-				
-				this->fill_initialize(first, last, integral());
+
+				this->create_storage(first, last, integral());
 			}
 
 			vector(const vector& other)
 			{
 				if (*this != other)
-					this->copy(other, false);
+					this->copy_init(other, false);
 			}
 
 			~vector(void)
@@ -75,78 +76,9 @@ namespace ft
 
 			vector	&		operator=(const vector &other)
 			{
-				if (*this == other)
-					return (*this);
-				this->copy(other, true);
+				if (*this != other)
+					this->copy(other);
 				return (*this);
-			}
-
-			void			assign(size_type count, const_reference value) 
-			{
-				this->assign_range(count, value, true_type());
-			}
-
-			template< class InputIt >
-			void			assign(InputIt first, InputIt last)
-			{
-				typedef typename ft::is_integral<InputIt>::type integral;
-				
-				this->assign_range(first, last, integral());
-			}
-
-			// ELEMENT ACCESS
-			reference			operator[](size_type index)
-			{
-				return (*(this->start + index));
-			}
-
-			const_reference		operator[](size_type index) const
-			{
-				return (*(this->start + index));
-			}
-			
-			reference			at(size_type index)
-			{
-				if (index >= this->size())
-					throw std::out_of_range("vector: out of range");
-				return ((*this)[index]);
-			}
-
-			const_reference		at(size_type index) const
-			{
-				if (index >= this->size())
-					throw std::out_of_range("vector: out of range");
-				return ((*this)[index]);
-			}
-
-			reference			front(void)
-			{
-				return (*(this->begin()));
-			}
-
-			const_reference		front(void) const
-			{
-				return (*(this->begin()));
-			}
-
-			reference			back(void)
-			{
-				return (*(this->end() - 1));
-			}
-
-			const_reference		back(void) const
-			{
-				return (*(this->end() - 1));
-			}
-
-			pointer					data(void)
-			{
-				return (this->empty() ? NULL : this->start);
-			}
-
-			const pointer			data(void) const
-			{
-				return (this->empty() ? NULL : this->start);
 			}
 
 			// ITERATORS
@@ -211,12 +143,67 @@ namespace ft
 				if (new_cap > this->max_size())
 					throw std::length_error("vector::reserve");
 				if (capacity() < new_cap)
-					reallocate(new_cap);
+					this->realloc_reserve(new_cap);
 			}
 
 			size_type			capacity(void) const
 			{
 				return (size_type(this->end_of_storage - this->start));
+			}
+			
+			// ELEMENT ACCESS
+			reference			operator[](size_type index)
+			{
+				return (*(this->start + index));
+			}
+
+			const_reference		operator[](size_type index) const
+			{
+				return (*(this->start + index));
+			}
+			
+			reference			at(size_type index)
+			{
+				if (index >= this->size())
+					throw std::out_of_range("vector: out of range");
+				return ((*this)[index]);
+			}
+
+			const_reference		at(size_type index) const
+			{
+				if (index >= this->size())
+					throw std::out_of_range("vector: out of range");
+				return ((*this)[index]);
+			}
+
+			reference			front(void)
+			{
+				return (*(this->begin()));
+			}
+
+			const_reference		front(void) const
+			{
+				return (*(this->begin()));
+			}
+
+			reference			back(void)
+			{
+				return (*(this->end() - 1));
+			}
+
+			const_reference		back(void) const
+			{
+				return (*(this->end() - 1));
+			}
+
+			pointer					data(void)
+			{
+				return (this->empty() ? NULL : this->start);
+			}
+
+			const pointer			data(void) const
+			{
+				return (this->empty() ? NULL : this->start);
 			}
 
 			// MODIFIERS
@@ -224,305 +211,313 @@ namespace ft
 			{
 				if (this->size() == 0) return ;
 
-				this->finish = this->start;
+				this->erase_at_end(this->start);								
+			}
+
+			void				push_back(const_reference value)
+			{
+				if (this->finish != this->end_of_storage)
+				{
+					this->allocator.construct(this->finish, value);
+					this->finish++;
+				}
+				else
+					this->realloc_insert(end(), value);
+			}
+
+			void				pop_back()
+			{
+				--this->finish;
+				this->allocator.destroy(this->finish);
 			}
 
 			iterator			insert(iterator pos, const T &value)
 			{
-				size_type diff = pos - this->begin();
-				
-				this->insert_value(diff, value);
-				return (this->begin() + diff);
+				this->realloc_insert(pos, value);
+				return (this->begin() + (pos - this->begin()));
 			}
 
 			void				insert(iterator pos, size_type amount, const_reference value)
 			{
-				size_type diff = pos - this->begin();
-
-				if (amount == 0) return ;
-
-				this->insert_range(diff, amount, value, true_type());
+				this->insert_dispatch(pos, amount, value, true_type());
 			}
 
 			template<class InputIt>
 			void				insert(iterator pos, InputIt first, InputIt last)
 			{
 				typedef typename ft::is_integral<InputIt>::type integral;
-				size_type diff = pos - this->begin();
 
-				this->insert_range(diff, first, last, integral());
+				this->insert_dispatch(pos, first, last, integral());	
 			}
 
 			iterator			erase(iterator pos)
 			{
-				size_type diff = pos - this->begin();
-
-				this->erase_value(diff);
-				return (this->begin() + diff);
+				return (this->_erase(pos));
 			}
 
 			iterator			erase(iterator first, iterator last)
 			{
-				return (this->erase_iterator_value(first, last));
-			}
-
-			void				push_back(const_reference value)
-			{
-				if (this->finish == this->end_of_storage)
-					this->reallocate(this->new_size());
-				this->allocator.construct(this->finish, value);
-				++this->finish;
-			}
-
-			void				pop_back(void)
-			{
-				if (this->size() > 0)
-					this->erase_value(this->size() - 1);
+				return (this->_erase_range(first, last));
 			}
 
 			void			resize(size_type count, value_type value = value_type())
 			{
 				if (count < this->size())
-					this->finish = this->start + count;
+					this->erase_at_end(this->begin() + count);
 				else if (count > this->size())
-					this->reallocate_and_set_finish(new_size(count), count, value);
+					this->realloc_resize_fill(this->end(), count, value);
 			}
 
 			void			swap(vector &other)
 			{
-				if (*this == other) return ;
+				if (*this != other)
+					this->_swap(other);
+			}
+			private:
+				pointer 		start;
+				pointer			finish;
+				pointer 		end_of_storage;
+				allocator_type	allocator;
+
 				
-				this->swap_vector(other);
-			}
-		private:
-			pointer			start;
-			pointer 		finish;
-			pointer 		end_of_storage;
-			allocator_type	allocator;
-
-			void	create_storage(size_type size)
-			{
-				this->start = this->allocator.allocate(size);
-				this->finish = this->start;
-				this->end_of_storage = this->start + size;
-			}
-
-			void	delete_storage(void)
-			{
-				this->allocator.deallocate(this->start, this->capacity());
-			}
-			
-			void	swap_pointer(pointer *a, pointer *b)
-			{
-				pointer tmp;
-
-				tmp = *a;
-				*a = *b;
-				*b = tmp;
-			}
-
-			void	swap_vector(vector &other)
-			{
-				swap_pointer(&other.start, &this->start);
-				swap_pointer(&other.finish, &this->finish);
-				swap_pointer(&other.end_of_storage, &this->end_of_storage);
-			}
-
-			void	fill_initialize(size_type size, const value_type &value, true_type)
-			{
-				this->create_storage(size);
-				for (size_type i = 0;i < size;i++)
+				void	create_storage(size_type size)
 				{
-					this->allocator.construct(this->finish, value);
-					this->finish++;
+					this->start = this->allocator.allocate(size);
+					this->finish = this->start;
+					this->end_of_storage = this->start + size;
 				}
-			}
-
-			template<class InputIt>
-			void	fill_initialize(InputIt first, InputIt last, false_type)
-			{
-				this->create_storage(last - first);
-				for (InputIt it = first;it != last;it++)
-					this->allocator.construct(this->finish++, *it);
-			}
-			
-			void	reallocate(size_type size)
-			{
-				size_type		current_size = this->size();
-				pointer 		_start 		= this->allocator.allocate(size);
-				pointer 		_finish		= _start;
 				
-				for (size_type i = 0;i < current_size;i++)
+				void	copy_init(const vector &other)
 				{
-					if (i < size)
-					{
-						*_finish = *(this->start + i);
-						// this->allocator.construct(_finish, *(this->start + i));
-						++_finish;
-					}
+					pointer 	_start = this->allocator.allocate(other.size());
+					pointer 	_finish = _start;
+
+					_finish = ft::uninitialized_copy(other.begin(), other.end(), _start);
+					this->start = _start;
+					this->finish = _finish;
+					this->end_of_storage = _finish;
 				}
-				this->delete_storage();
-				this->start = _start;
-				this->finish = _finish;
-				this->end_of_storage = _start + size;
-			}
 
-			void	reallocate(size_type size, T value)
-			{
-				size_type	before_size = this->size();
-				pointer 	_start = this->allocator.allocate(size);
-				pointer 	_finish = _start;
-
-				for (size_type i = 0;i < size;i++)
+				void	copy(const vector &other)
 				{
-					*_finish = i < before_size ? *(this->start + i) : value;
+					pointer 	_start = this->allocator.allocate(other.size());
+					pointer 	_finish = _start;
+
+					_finish = ft::uninitialized_copy(other.begin(), other.end(), _start);
+					this->destroy_it(this->begin(), this->end());
+					this->deallocate(this->start, this->end_of_storage - this->start);
+					this->start = _start;
+					this->finish = _finish;
+					this->end_of_storage = _finish;
+				}
+				
+				void	create_storage(size_type size, value_type value, true_type)
+				{
+					this->start = this->allocator.allocate(size);
+					for (size_type i = 0;i < size;i++)
+						this->allocator.construct(this->start + i, value);
+					this->finish = this->start + size;
+					this->end_of_storage = this->start + size;
+				}
+
+				template<class InputIt>
+				void	create_storage(InputIt first, InputIt last, false_type)
+				{
+					size_type size = last - first;
+					
+					this->start = this->allocator.allocate(size);
+					for (size_type i = 0;first != last;++first, i++)
+						this->allocator.construct(this->start + i, *first);
+					this->finish = this->start + size;
+					this->end_of_storage = this->start + size;
+				}
+
+				void	delete_storage()
+				{
+					this->deallocate(this->start, this->end_of_storage - this->start);
+					this->destroy_it(this->start, this->finish);
+				}
+
+				void	deallocate(pointer p, size_t size)
+				{
+					if (p)
+						this->allocator.deallocate(p, size);
+				}
+
+				void	erase_at_end(pointer pos)
+				{
+					this->destroy_it(pos, this->finish);
+					this->finish = pos;
+				}
+
+				size_t	new_size()
+				{
+					size_t size = this->size();
+
+					return (size == 0 ? 1 : size * 2);
+				}
+
+				size_t	new_size(size_t n)
+				{
+					size_type	capacity = this->capacity();
+
+					if (n <= capacity)
+						return (capacity);
+					return (n);
+				}
+
+				void	realloc_reserve(size_type count)
+				{
+					pointer		_start(this->allocator.allocate(count));
+					pointer		_finish(_start);
+
+					_finish = pointer();
+					_finish = ft::uninitialized_copy(this->start, this->finish, _start);
+					this->destroy_it(this->start, this->finish);
+					this->deallocate(this->start, this->end_of_storage - this->start);
+					this->start = _start;
+					this->finish = _finish;
+					this->end_of_storage = _start + count;
+				}
+
+				void	realloc_insert(iterator pos, const_reference value)
+				{
+					size_type	size = new_size();
+					size_type	_pos = pos - this->begin();
+					pointer		_start(this->allocator.allocate(size));
+					pointer		_finish(_start);
+
+					this->allocator.construct(_start + _pos, value);
+					_finish = pointer();
+					_finish = ft::uninitialized_copy(this->start, pos.base(), _start);
 					++_finish;
+					_finish = ft::uninitialized_copy(pos.base(), this->finish, _finish);
+					this->destroy_it(this->start, this->finish);
+					this->deallocate(this->start, this->end_of_storage - this->start);
+					this->start = _start;
+					this->finish = _finish;
+					this->end_of_storage = _start + size;
 				}
-				this->delete_storage();
-				this->start = _start;
-				this->finish = _finish;
-				this->end_of_storage = _start + size;
-			}
 
-			void	reallocate_and_set_finish(size_type size, size_type finish_index)
-			{
-				this->reallocate(size);
-				this->finish = this->start + finish_index;
-			}
-
-			void	reallocate_and_set_finish(size_type size, size_type finish_index, T value)
-			{
-				this->reallocate(size, value);
-				this->finish = this->start + finish_index;
-			}
-
-			void	copy(const vector &other, bool del)
-			{
-				pointer 	_start = this->allocator.allocate(other.size());
-				pointer 	_finish = _start;
-
-				for (size_type i = 0;i < other.size();i++)
+				template<class InputIt>
+				void	insert_dispatch(iterator pos, InputIt first, InputIt last, false_type)
 				{
-					this->allocator.construct(_start + i, other[i]);
-					_finish++;
+					this->realloc_insert_range(pos, first, last);
 				}
-				if (del)
-					this->delete_storage();
-				this->start = _start;
-				this->finish = _finish;
-				this->end_of_storage = _finish;
-			}
 
-			size_t	new_size()
-			{
-				size_t size = this->size();
-
-				return (size == 0 ? 1 : size * 2);
-			}
-
-			size_t	new_size(size_t n)
-			{
-				size_t size = this->size();
-
-				return (n < size * 2 ? size * 2 : n);
-			}
-
-			void	insert_value(size_type pos, const_reference value)
-			{
-				value_type	tmp;
-				value_type	tmp2;
-
-				if (this->finish == this->end_of_storage)
-					this->reallocate(new_size());
-				tmp = *(this->start + pos);
-				*(this->start + pos) = value;
-				for (size_type i = pos + 1;i < this->size() + 1;i++)
+				void	insert_dispatch(iterator pos, size_type count, const_reference value, false_type)
 				{
-					tmp2 = *(this->start + i);
-					*(this->start + i) = tmp;
-					tmp = tmp2;
+					this->realloc_insert_fill(pos, count, value);
 				}
-				++this->finish;
-			}
 
-			void	insert_range(size_type pos, size_type amount, const_reference value, true_type)
-			{
-				if (amount == 0) return ;
-				
-				if (amount > this->capacity() - this->size())
-					this->reallocate_and_set_finish(new_size(amount + this->size()), this->size(), value);
-				for (size_type i = 0;i < amount;i++)
-					this->insert_value(pos, value);
-			}
-
-			template<class InputIt>
-			void	insert_range(size_type pos, InputIt first, InputIt last, false_type)
-			{
-				size_type range_size = last - first;
-
-				if (range_size == 0) return ;
-				
-				if (range_size > this->capacity() - this->size())
-					this->reallocate_and_set_finish(new_size(range_size + this->size()), this->size());
-				for (InputIt it = first;it != last;++it)
-					this->insert_value(pos, *(first + (last - it - 1)));
-			}
-
-			void	assign_range(size_type count, const_reference value, true_type)
-			{
-				if (count == 0) return ;
-				
-				if (count > this->capacity())
-					this->reallocate(count);
-				this->finish = this->start;
-				for (size_type i = 0;i < count;i++)
+				template<class InputIt>
+				void	realloc_insert_range(iterator pos, InputIt first, InputIt last)
 				{
-					*(this->start + i) = value;
-					this->finish++;
+					if (first == last) return ;
+
+					difference_type	diff = last - first;
+					size_type		size = new_size(diff + this->size());
+					pointer			_start(this->allocator.allocate(size));
+					pointer			_finish(_start);
+
+					for (; first != last;++first)
+						this->allocator.construct(_start + (first - this->begin()), *first);
+					_finish = pointer();
+					_finish = ft::uninitialized_copy(this->start, pos.base(), _start);
+					_finish += diff;
+					_finish = ft::uninitialized_copy(pos.base(), this->finish, _finish);
+					this->destroy_it(this->start, this->finish);
+					this->deallocate(this->start, this->end_of_storage - this->start);
+					this->start = _start;
+					this->finish = _finish;
+					this->end_of_storage = _start + size;
 				}
-			}
 
-			template<class InputIt>
-			void	assign_range(InputIt first, InputIt last, false_type)
-			{
-				size_type count = last - first;
-
-				if (count == 0) return ;
-				if (count > this->capacity())
-					this->reallocate(count);
-				this->finish = this->start;
-				for (size_type i = 0;i < count;i++)
+				void	realloc_insert_fill(iterator pos, size_type count, const_reference value)
 				{
-					*(this->start + i) = *(first + i);
-					++this->finish;
+					if (count == 0) return ;
+					
+					size_type	_pos = pos - this->begin(); 
+					size_type	size = new_size(count + this->size());
+					pointer		_start(this->allocator.allocate(size));
+					pointer		_finish(_start);
+
+					for (size_type i = 0;i < count;i++)
+						this->allocator.construct(_start + _pos + i, value);
+					_finish = pointer();
+					_finish = ft::uninitialized_copy(this->start, pos.base(), _start);
+					_finish += count;
+					_finish = ft::uninitialized_copy(pos.base(), this->finish, _finish);
+					this->destroy_it(this->start, this->finish);
+					this->deallocate(this->start, this->end_of_storage - this->start);
+					this->start = _start;
+					this->finish = _finish;
+					this->end_of_storage = _start + size;
 				}
-			}
 
-			void	erase_value(size_type pos)
-			{
-				size_type current_size = this->size();
+				void	realloc_resize_fill(iterator pos, size_type count, const_reference value)
+				{
+					if (count == 0) return ;
+					
+					size_type	_pos = pos - this->begin(); 
+					size_type	size = count;
+					pointer		_start(this->allocator.allocate(size));
+					pointer		_finish(_start);
 
-				for (size_type i = pos;i < current_size - 1;i++)
-					this->allocator.construct(this->start + i, *(this->start + i + 1));
-				--this->finish;
-			}
+					for (size_type i = 0;i < count;i++)
+						this->allocator.construct(_start + _pos + i, value);
+					_finish = pointer();
+					_finish = ft::uninitialized_copy(this->start, pos.base(), _start);
+					_finish += count;
+					_finish = ft::uninitialized_copy(pos.base(), this->finish, _finish);
+					this->destroy_it(this->start, this->finish);
+					this->deallocate(this->start, this->end_of_storage - this->start);
+					this->start = _start;
+					this->finish = _finish;
+					this->end_of_storage = _start + size;
+				}
 
-			iterator	erase_iterator_value(iterator first, iterator last)
-			{
-				size_type start = first - this->begin();
-				size_type end = last - this->begin();
+				iterator	_erase(iterator pos)
+				{
+					iterator first = this->begin() + (pos - this->begin());
+					
+					if (first + 1 != this->end())
+						for (iterator it = first + 1;it != this->end();++it, (void)++first)
+							*first = *it;
+					--this->finish;
+					this->allocator.destroy(this->finish);
+					return (this->begin() + (pos - this->begin()));
+				}
 				
-				if (first - last == 0)
-					return (last);
-				if (end - start == size())
-					this->clear();
-				else
-					for (size_type i = start;i < end;i++)
-						this->erase_value(start);
-				return (this->begin() + start);
-			}
+				iterator	_erase_range(iterator first, iterator last)
+				{
+					iterator _first = first;
+
+					if (first != last)
+					{
+						if (last != end())
+							for (iterator it = last;it != end();++it, ++_first)
+								*_first = *it;
+						this->erase_at_end(_first);
+					}
+					return (first);	
+				}
+
+				template<class InputIt>
+				void	destroy_it(InputIt first, InputIt last)
+				{
+					for (;first != last; ++first)
+						this->allocator.destroy(first);
+				}
+
+				void	_swap(vector &other)
+				{
+					ft::swap(&other.start, &this->start);
+					ft::swap(&other.finish, &this->finish);
+					ft::swap(&other.end_of_storage, &this->end_of_storage);
+				}
 	};
-	
+
 	template<class T, class Allocator>
 	bool	operator==(const ft::vector<T, Allocator>& a, const ft::vector<T, Allocator>& b)
 	{
@@ -565,6 +560,5 @@ namespace ft
 		lhs.swap(rhs);
 	}
 }
-
 
 #endif
