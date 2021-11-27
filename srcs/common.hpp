@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/26 07:15:21 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/26 09:42:15 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/27 03:51:00 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,6 @@
 
 namespace ft
 {
-	// template<class T>
-	// T* addressof(T& arg)
-	// {
-	// 	return reinterpret_cast<T*>(
-	// 			&const_cast<char&>(
-	// 				reinterpret_cast<const volatile char&>(arg)));
-	// }
 	
 	template<class T>
 	T* addressof(T& arg)

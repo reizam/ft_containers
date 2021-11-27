@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:47:31 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/26 10:55:09 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/26 15:34:39 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@
 # include <iterator>
 #define TESTED_NAMESPACE std
 #endif
+
+#include <map>
 
 #ifdef FT_VERSION
 class foo {
@@ -121,6 +123,8 @@ void	test(void)
 
 int main(void)
 {
+	std::map<int, int> map_test;
+	
 	test();
 	return (0);
 }
