@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/26 07:15:21 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/27 03:51:00 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/27 05:37:38 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,33 @@ namespace ft
 		*a = *b;
 		*b = tmp;
 	}
+	
+	template<typename T1, typename T2, typename Result>
+    struct binary_function
+    {
+      typedef T1 		first_argument_type; 
+
+      typedef T2 		second_argument_type;
+
+      typedef Result 	result_type;
+    };
+
+	template<typename Arg, typename Result>
+    struct unary_function
+    {
+      	typedef Arg		argument_type;   
+
+     	 typedef Result	result_type;  
+    };
+
+	template<typename T>
+    struct less : public binary_function<T, T, bool>
+    {
+      	bool operator()(const T& x, const T& y) const
+     	{
+			return x < y;
+		}
+    };
 };
 
 
