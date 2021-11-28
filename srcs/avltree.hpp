@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:36:56 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/28 10:05:01 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/28 11:51:26 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,184 @@ namespace ft
 		}
 	};
 
+	template<typename T>
+	node<T>*	increment_tree_node(node<T>* n)
+	{
+		if (n->right != NULL)
+		{
+			n = n->right;
+			while (n->left != NULL)
+				n = n->left;
+		}
+		else
+		{
+			node<T>* tmp = n->parent;
+			while (n == tmp->right)
+			{
+				n = tmp;
+				tmp = tmp->parent;
+			}
+			if (n->right != tmp)
+				n = tmp;
+		}
+		return (n);
+	}
+
+	template<typename T>
+	node<T>*	decrement_tree_node(node<T>* n)
+	{
+		if (n->left != NULL)
+		{
+			n = n->left;
+			while (n->right != NULL)
+				n = n->right;
+		}
+		else
+		{
+			node<T>* tmp = n->parent;
+			while (n == tmp->left)
+			{
+				n = tmp;
+				tmp = tmp->parent;
+			}
+			n = tmp;
+		}
+		return (n);
+	}
+
+	template<typename T>
+	struct	AVLTree_iterator
+	{
+		typedef T							value_type;
+		typedef value_type&					reference;
+		typedef T*							pointer;
+		typedef bidirectional_iterator_tag	iterator_category;
+      	typedef ptrdiff_t                 	difference_type;
+		typedef struct node<T>*				node_pointer;
+		typedef AVLTree_iterator<T>			self;
 	
+		AVLTree_iterator() : current() {}
+
+		AVLTree_iterator(node_pointer src) : current(src) {}
+
+		reference			operator*() const
+		{
+			return (this->current->value);
+		}
+
+		pointer				operator->() const
+		{
+			return (&(this->current->value));
+		}
+
+		self&	operator++()
+		{
+			this->current = ft::increment_tree_node<value_type>(this->current);
+			return (*this);
+		}
+
+		self	operator++(int)
+		{
+			self	tmp = *this;
+			this->current = ft::increment_tree_node<value_type>(this->current);
+			return (tmp);
+		}
+
+		self&	operator--()
+		{
+			this->current = ft::decrement_tree_node<value_type>(this->current);
+			return (*this);
+		}
+
+		self	operator--(int)
+		{
+			self tmp = *this;
+			this->current = ft::decrement_tree_node<value_type>(this->current);
+			return (tmp);
+		}
+
+		bool	operator==(const self& x) const
+     	{
+			return (this->current == x.current);
+		}
+
+		bool	operator!=(const self& x) const
+     	{
+			return !(this->current == x.current);
+		}
+		
+		public:
+			node_pointer current;
+	};
+
+	template<typename T>
+	struct	AVLTree_const_iterator
+	{
+		typedef T							value_type;
+		typedef const value_type&			reference;
+		typedef const T*					pointer;
+		typedef bidirectional_iterator_tag	iterator_category;
+		typedef AVLTree_iterator<T>			iterator;
+      	typedef ptrdiff_t                 	difference_type;
+		typedef struct node<T>*				node_pointer;
+		typedef AVLTree_iterator<T>			self;
+	
+		AVLTree_const_iterator() : current() {}
+
+		AVLTree_const_iterator(node_pointer src) : current(src) {}
+
+		AVLTree_const_iterator(const iterator& src) : current(src.current) {}
+
+		reference			operator*() const
+		{
+			return (this->current->value);
+		}
+
+		pointer				operator->() const
+		{
+			return (&(this->current->value));
+		}
+
+		self&	operator++()
+		{
+			this->current = ft::increment_tree_node(this->current);
+			return (*this);
+		}
+
+		self	operator++(int)
+		{
+			self	tmp = *this;
+			this->current = ft::increment_tree_node(this->current);
+			return (tmp);
+		}
+
+		self&	operator--()
+		{
+			this->current = ft::decrement_tree_node(this->current);
+			return (*this);
+		}
+
+		self	operator--(int)
+		{
+			self tmp = *this;
+			this->current = ft::decrement_tree_node(this->current);
+			return (tmp);
+		}
+
+		bool	operator==(const self& x) const
+     	{
+			return (this->current == x.current);
+		}
+
+		bool	operator!=(const self& x) const
+     	{
+			return !(this->current == x.current);
+		}
+		
+		public:
+			node_pointer current;
+	};
+
 	template<class V, class T, class Key, class Compare>
 	class AVLTree
 	{
@@ -78,10 +255,10 @@ namespace ft
 			typedef value_type&													reference;
 			typedef const value_type&											const_reference;
 		  public:
-			typedef AVLTree_iterator<value_type>       iterator;
-			typedef AVLTree_const_iterator<value_type> const_iterator;
-			typedef ft::reverse_iterator<iterator>       reverse_iterator;
-			typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
+			typedef ft::AVLTree_iterator<value_type>      					 	iterator;
+			typedef ft::AVLTree_const_iterator<value_type> 						const_iterator;
+			typedef ft::reverse_iterator<iterator>       						reverse_iterator;
+			typedef ft::reverse_iterator<const_iterator> 						const_reverse_iterator;
 		public:
 			AVLTree() : root(NULL), nodes_count(0), compare(), allocator() {}
 			
@@ -312,184 +489,6 @@ namespace ft
 			size_type			nodes_count;
 			key_compare			compare;
 			node_allocator_type	allocator;
-	};
-
-	template<typename T>
-	node<T>*	increment_tree_node(node<T>* n)
-	{
-		if (n->right != NULL)
-		{
-			n = n->right;
-			while (n->left != NULL)
-				n = n->left;
-		}
-		else
-		{
-			node<T>* tmp = n->parent;
-			while (n == tmp->right)
-			{
-				n = tmp;
-				tmp = tmp->parent;
-			}
-			if (n->right != tmp)
-				n = tmp;
-		}
-		return (n);
-	}
-
-	template<typename T>
-	node<T>*	decrement_tree_node(node<T>* n)
-	{
-		if (n->left != NULL)
-		{
-			n = n->left;
-			while (n->right != NULL)
-				n = n->right;
-		}
-		else
-		{
-			node<T> tmp = n->parent;
-			while (n == tmp->left)
-			{
-				n = tmp;
-				tmp = tmp->parent;
-			}
-			n = tmp;
-		}
-		return (n);
-	}
-
-	template<typename T>
-	struct	AVLTree_iterator
-	{
-		typedef T							value_type;
-		typedef value_type&					reference;
-		typedef T*							pointer;
-		typedef bidirectional_iterator_tag	iterator_category;
-      	typedef ptrdiff_t                 	difference_type;
-		typedef struct node<T>*				node_pointer;
-		typedef AVLTree_iterator<T>			self;
-	
-		AVLTree_iterator() : current() {}
-
-		AVLTree_iterator(node_pointer src) : current(src) {}
-
-		reference			operator*() const
-		{
-			return (this->current->value);
-		}
-
-		pointer				operator->() const
-		{
-			return (&(this->current->value));
-		}
-
-		self&	operator++()
-		{
-			this->current = ft::increment_tree_node(this->current);
-			return (*this);
-		}
-
-		self	operator++(int)
-		{
-			self	tmp = *this;
-			this.current = ft::increment_tree_node(this->current);
-			return (tmp)
-		}
-
-		self&	operator--()
-		{
-			this->current = ft::decrement_tree_node(this->current);
-			return (*this);
-		}
-
-		self	operator--(int)
-		{
-			self tmp = *this;
-			this->current = ft::decrement_tree_node(this->current);
-			return (tmp);
-		}
-
-		bool	operator==(const self& x) const
-     	{
-			return (this->current == x.current);
-		}
-
-		bool	operator!=(const self& x) const
-     	{
-			return !(this->current == x.current);
-		}
-		
-		public:
-			node_pointer current;
-	};
-
-	template<typename T>
-	struct	AVLTree_const_iterator
-	{
-		typedef T							value_type;
-		typedef const value_type&			reference;
-		typedef const T*					pointer;
-		typedef bidirectional_iterator_tag	iterator_category;
-		typedef AVLTree_iterator<T>			iterator;
-      	typedef ptrdiff_t                 	difference_type;
-		typedef struct node<T>*				node_pointer;
-		typedef AVLTree_iterator<T>			self;
-	
-		AVLTree_const_iterator() : current() {}
-
-		AVLTree_const_iterator(node_pointer src) : current(src) {}
-
-		AVLTree_const_iterator(const iterator& src) : current(src.current) {}
-
-		reference			operator*() const
-		{
-			return (this->current->value);
-		}
-
-		pointer				operator->() const
-		{
-			return (&(this->current->value));
-		}
-
-		self&	operator++()
-		{
-			this->current = ft::increment_tree_node(this->current);
-			return (*this);
-		}
-
-		self	operator++(int)
-		{
-			self	tmp = *this;
-			this.current = ft::increment_tree_node(this->current);
-			return (tmp)
-		}
-
-		self&	operator--()
-		{
-			this->current = ft::decrement_tree_node(this->current);
-			return (*this);
-		}
-
-		self	operator--(int)
-		{
-			self tmp = *this;
-			this->current = ft::decrement_tree_node(this->current);
-			return (tmp);
-		}
-
-		bool	operator==(const self& x) const
-     	{
-			return (this->current == x.current);
-		}
-
-		bool	operator!=(const self& x) const
-     	{
-			return !(this->current == x.current);
-		}
-		
-		public:
-			node_pointer current;
 	};
 
 }
