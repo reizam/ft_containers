@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:36:56 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/28 04:08:09 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/28 10:00:29 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,14 +23,12 @@
 namespace ft
 {
 
-	template<class V, class T, class Key>
+	template<class T>
 	struct node
 	{
-		typedef V					value_type;
+		typedef T					value_type;
 		typedef value_type&			reference;
 		typedef const value_type&	const_reference;
-		typedef T					mapped_type;
-		typedef Key					key_type;
 		typedef struct node*		node_pointer;
 		
 		node_pointer	left;
@@ -74,13 +72,18 @@ namespace ft
 			typedef V															value_type;
 			typedef Compare														key_compare;
 			typedef	size_t														size_type;
-			typedef struct node<value_type, key_type, mapped_type>				node;
+			typedef struct node<value_type>										node;
 			typedef node*														node_pointer;
 			typedef typename std::allocator<node>								node_allocator_type;
 			typedef value_type&													reference;
 			typedef const value_type&											const_reference;
 		public:
 			AVLTree() : root(NULL), nodes_count(0), compare(), allocator() {}
+			
+			~AVLTree()
+			{
+				this->destroy(this->root);
+			}
 		public:
 			node_pointer	find(node_pointer root, key_type key)
 			{
@@ -98,6 +101,7 @@ namespace ft
 		
 			node_pointer	find(const key_type& key)
 			{
+				std::cout << root->value.first << ", " << root->value.second << ", current_key: " << key << std::endl;
 				return (this->find(this->root, key));
 			}
 			
@@ -138,11 +142,11 @@ namespace ft
 						n->parent->left = right;
 				}
 				right->parent = n->parent;
-				if (right->right != NULL)
-					right->right->parent = n;
-				n->left = right->right;
+				if (right->left != NULL)
+					right->left->parent = n;
+				n->right = right->left;
 				n->parent = right;
-				right->right = n;
+				right->left = n;
 				if (n == this->root)
 					this->root = right;
 			}
@@ -162,7 +166,7 @@ namespace ft
 				left->parent = n->parent;
 				if (left->right != NULL)
 					left->right->parent = n;
-				n->right = left->right;
+				n->left = left->right;
 				n->parent = left;
 				left->right = n;
 				if (n == this->root)
@@ -172,7 +176,7 @@ namespace ft
 			void	rebalance(node_pointer n)
 			{
 				if (n == NULL) return ;
-
+				
 				int	depth = this->depth(n->right) - this->depth(n->left);
 				if (depth == 2)
 				{
@@ -183,9 +187,10 @@ namespace ft
 				else if (depth == -2)
 				{
 					if (this->depth(n->left->right) - this->depth(n->left->left) == 1)
-						this->rotate_left(n->right);
+						this->rotate_left(n->left);
 					this->rotate_right(n);
 				}
+				else
 				this->rebalance(n->parent);
 			}
 
@@ -270,15 +275,216 @@ namespace ft
 				return (1);
 			}
 
+			void		destroy(node_pointer n)
+			{
+				if (n == NULL) return ;
+
+				if (n->left != NULL)
+					destroy(n->left);
+				if (n->right != NULL)
+					destroy(n->right);
+				this->allocator.destroy(n);
+				this->allocator.deallocate(n, 1);
+			}
+
+			void		destroy(void)
+			{
+				this->destroy(this->root);
+				this->root = NULL;
+			}
+
 			size_type	size() const
 			{
 				return (this->nodes_count);
+			}
+
+			node_allocator_type	get_allocator() const
+			{
+				return (this->allocator);
 			}
 		protected:
 			node_pointer		root;
 			size_type			nodes_count;
 			key_compare			compare;
 			node_allocator_type	allocator;
+	};
+
+	template<typename T>
+	node<T>*	increment_tree_node(node<T>* n)
+	{
+		if (n->right != NULL)
+		{
+			n = n->right;
+			while (n->left != NULL)
+				n = n->left;
+		}
+		else
+		{
+			node<T>* tmp = n->parent;
+			while (n == tmp->right)
+			{
+				n = tmp;
+				tmp = tmp->parent;
+			}
+			if (n->right != tmp)
+				n = tmp;
+		}
+		return (n);
+	}
+
+	template<typename T>
+	node<T>*	decrement_tree_node(node<T>* n)
+	{
+		if (n->left != NULL)
+		{
+			n = n->left;
+			while (n->right != NULL)
+				n = n->right;
+		}
+		else
+		{
+			node<T> tmp = n->parent;
+			while (n == tmp->left)
+			{
+				n = tmp;
+				tmp = tmp->parent;
+			}
+			n = tmp;
+		}
+		return (n);
+	}
+
+	template<typename T>
+	struct	AVLTree_iterator
+	{
+		typedef T							value_type;
+		typedef value_type&					reference;
+		typedef T*							pointer;
+		typedef bidirectional_iterator_tag	iterator_category;
+      	typedef ptrdiff_t                 	difference_type;
+		typedef struct node<T>*				node_pointer;
+		typedef AVLTree_iterator<T>			self;
+	
+		AVLTree_iterator() : current() {}
+
+		AVLTree_iterator(node_pointer src) : current(src) {}
+
+		reference			operator*() const
+		{
+			return (this->current->value);
+		}
+
+		pointer				operator->() const
+		{
+			return (&(this->current->value));
+		}
+
+		self&	operator++()
+		{
+			this->current = ft::increment_tree_node(this->current);
+			return (*this);
+		}
+
+		self	operator++(int)
+		{
+			self	tmp = *this;
+			this.current = ft::increment_tree_node(this->current);
+			return (tmp)
+		}
+
+		self&	operator--()
+		{
+			this->current = ft::decrement_tree_node(this->current);
+			return (*this);
+		}
+
+		self	operator--(int)
+		{
+			self tmp = *this;
+			this->current = ft::decrement_tree_node(this->current);
+			return (tmp);
+		}
+
+		bool	operator==(const self& x) const
+     	{
+			return (this->current == x.current);
+		}
+
+		bool	operator!=(const self& x) const
+     	{
+			return !(this->current == x.current);
+		}
+		
+		public:
+			node_pointer current;
+	};
+
+	template<typename T>
+	struct	AVLTree_const_iterator
+	{
+		typedef T							value_type;
+		typedef const value_type&			reference;
+		typedef const T*					pointer;
+		typedef bidirectional_iterator_tag	iterator_category;
+		typedef AVLTree_iterator<T>			iterator;
+      	typedef ptrdiff_t                 	difference_type;
+		typedef struct node<T>*				node_pointer;
+		typedef AVLTree_iterator<T>			self;
+	
+		AVLTree_const_iterator() : current() {}
+
+		AVLTree_const_iterator(node_pointer src) : current(src) {}
+
+		AVLTree_const_iterator(const iterator& src) : current(src.current) {}
+
+		reference			operator*() const
+		{
+			return (this->current->value);
+		}
+
+		pointer				operator->() const
+		{
+			return (&(this->current->value));
+		}
+
+		self&	operator++()
+		{
+			this->current = ft::increment_tree_node(this->current);
+			return (*this);
+		}
+
+		self	operator++(int)
+		{
+			self	tmp = *this;
+			this.current = ft::increment_tree_node(this->current);
+			return (tmp)
+		}
+
+		self&	operator--()
+		{
+			this->current = ft::decrement_tree_node(this->current);
+			return (*this);
+		}
+
+		self	operator--(int)
+		{
+			self tmp = *this;
+			this->current = ft::decrement_tree_node(this->current);
+			return (tmp);
+		}
+
+		bool	operator==(const self& x) const
+     	{
+			return (this->current == x.current);
+		}
+
+		bool	operator!=(const self& x) const
+     	{
+			return !(this->current == x.current);
+		}
+		
+		public:
+			node_pointer current;
 	};
 
 }

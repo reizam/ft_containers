@@ -6,12 +6,14 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:44:30 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/27 09:15:14 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/28 04:28:00 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef FT_PAIR_HPP
 # define FT_PAIR_HPP
+
+#include "type_traits.hpp"
 
 namespace ft
 {
@@ -35,8 +37,8 @@ namespace ft
 		{
 			if (*this != other)
 			{
-				this->first = T1(other.first);
-				this->second = T2(other.second);
+				first = other.first;
+				second = other.second;
 			}
 			return (*this);
 		}

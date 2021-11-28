@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/28 04:07:23 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/28 08:35:08 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ namespace ft
 			// TODO: replace iterators/size type with the type of the binary tree. 
 			typedef Key																		key_type;
 			typedef T																		mapped_type;
-			typedef ft::pair<const Key, T>													value_type;
+			typedef ft::pair<Key, T>														value_type;
 			typedef size_t																	size_type;
 			typedef ptrdiff_t																difference_type;
 			typedef Compare																	key_compare;
@@ -72,7 +72,7 @@ namespace ft
 			{
 				node_pointer result = this->tree.find(key);
 
-				if (result == NULL || this->size() == 0)
+				if (this->size() == 0 || result == NULL)
 					throw std::out_of_range("map::at");
 				return (result->value.second);
 			}
@@ -81,18 +81,14 @@ namespace ft
 			{
 				node_pointer result = this->tree.find(key);
 
-				if (result == NULL || this->size() == 0)
+				if (this->size() == 0 || result == NULL)
 					throw std::out_of_range("map::at");
 				return (result->value.second);
 			}
 
 			T&			operator[](const key_type& key)
 			{
-				node_pointer result = this->tree.find(key);
-				
-				if (result == NULL)
-					return (NULL);
-				return (result->value.second);
+				return (this->tree.find(key)->value.second);
 			}
 			
 			// CAPACITY
@@ -106,10 +102,20 @@ namespace ft
 				return (this->size() == 0);
 			}
 
-			// MODIFIERS
-			void		insert(const value_type &value)
+			size_type	max_size() const
 			{
-				this->tree.insert(value);
+				return (this->tree.allocator.max_size());
+			}
+
+			// MODIFIERS
+			void		clear()
+			{
+				this->tree.destroy();
+			}
+			
+			ft::pair<iterator, bool>	insert(const value_type& value)
+			{
+				
 			}
 		private:
 			rb_tree			tree;
