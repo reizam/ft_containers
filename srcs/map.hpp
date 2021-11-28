@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/28 08:35:08 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/28 10:06:03 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,12 @@ namespace ft
 		private:
 			typedef ft::AVLTree<value_type, mapped_type, key_type, key_compare>				rb_tree;
 			typedef typename rb_tree::node_pointer											node_pointer;
+		public:
+			typedef typename rb_tree::iterator		 										iterator;
+			typedef typename rb_tree::const_iterator	 									const_iterator;
+			typedef typename rb_tree::difference_type	 									difference_type;
+			typedef typename rb_tree::reverse_iterator	 									reverse_iterator;
+			typedef typename rb_tree::const_reverse_iterator 								const_reverse_iterator;
 		public:
 			class value_compare : ft::binary_function<value_type, value_type, bool>
 			{

@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:36:56 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/28 10:00:29 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/28 10:05:01 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,11 @@ namespace ft
 			typedef typename std::allocator<node>								node_allocator_type;
 			typedef value_type&													reference;
 			typedef const value_type&											const_reference;
+		  public:
+			typedef AVLTree_iterator<value_type>       iterator;
+			typedef AVLTree_const_iterator<value_type> const_iterator;
+			typedef ft::reverse_iterator<iterator>       reverse_iterator;
+			typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 		public:
 			AVLTree() : root(NULL), nodes_count(0), compare(), allocator() {}
 			
