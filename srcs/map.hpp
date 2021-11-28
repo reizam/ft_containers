@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/27 05:37:43 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/28 04:07:23 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,12 @@
 #include "common.hpp"
 #include "iterator.hpp"
 #include "pair.hpp"
-#include "tree.hpp"
+#include "avltree.hpp"
 
 namespace ft
 {
 
-	template<class Key, class T, class Compare = ft::less<Key>, class Allocator = std::allocator<ft::pair<const Key, T>>>
+	template<class Key, class T, class Compare = ft::less<Key>, class Allocator = std::allocator<ft::pair<const Key, T> > >
 	class map
 	{
 
@@ -34,18 +34,14 @@ namespace ft
 			typedef size_t																	size_type;
 			typedef ptrdiff_t																difference_type;
 			typedef Compare																	key_compare;
-			typedef Allocator																allocator_type;
+			typedef typename Allocator::template rebind<ft::pair<const Key, T> >::other		allocator_type;
 			typedef typename allocator_type::reference										reference;
 			typedef typename allocator_type::const_reference								const_reference;
 			typedef typename allocator_type::pointer										pointer;
 			typedef typename allocator_type::const_pointer									const_pointer;
-			typedef ft::normal_iterator<pointer, map>										iterator;
-			typedef ft::normal_iterator<const_pointer, map>									const_iterator;
-			typedef ft::reverse_iterator<iterator>											reverse_iterator;
-			typedef ft::reverse_iterator<const_iterator>									const_reverse_iterator;
 		private:
-			typedef typename Allocator::template rebind<ft::pair<const Key, T>>::other		allocator_type;
-			typedef RBTree<Key, T, Compare, Allocator>				rb_tree;
+			typedef ft::AVLTree<value_type, mapped_type, key_type, key_compare>				rb_tree;
+			typedef typename rb_tree::node_pointer											node_pointer;
 		public:
 			class value_compare : ft::binary_function<value_type, value_type, bool>
 			{
@@ -69,6 +65,51 @@ namespace ft
 			allocator_type	get_allocator() const
 			{
 				return (this->allocator);
+			}
+			
+			// ELEMENT ACCESS
+			T&			at(const key_type& key)
+			{
+				node_pointer result = this->tree.find(key);
+
+				if (result == NULL || this->size() == 0)
+					throw std::out_of_range("map::at");
+				return (result->value.second);
+			}
+
+			const T&	at(const key_type& key) const
+			{
+				node_pointer result = this->tree.find(key);
+
+				if (result == NULL || this->size() == 0)
+					throw std::out_of_range("map::at");
+				return (result->value.second);
+			}
+
+			T&			operator[](const key_type& key)
+			{
+				node_pointer result = this->tree.find(key);
+				
+				if (result == NULL)
+					return (NULL);
+				return (result->value.second);
+			}
+			
+			// CAPACITY
+			size_type	size() const
+			{
+				return (this->tree.size());
+			}
+
+			bool		empty() const
+			{
+				return (this->size() == 0);
+			}
+
+			// MODIFIERS
+			void		insert(const value_type &value)
+			{
+				this->tree.insert(value);
 			}
 		private:
 			rb_tree			tree;

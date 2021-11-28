@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:44:30 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/27 03:59:16 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/27 09:15:14 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ namespace ft
 	template<class T1, class T2>
 	bool operator<(const ft::pair<T1,T2>& x, const ft::pair<T1,T2>& y)
 	{
-		return (x.first < t.first || (!(x.first < y.first) && x.second < y.second));
+		return (x.first < y.first || (!(x.first < y.first) && x.second < y.second));
 	}
 
 	template<class T1, class T2>
@@ -79,7 +79,7 @@ namespace ft
 	}
 
 	template<class T1, class T2>
-	bool operator>=(const ft::pair<T1,T2>& x, const ft::pair<T1,T2>& y)
+	bool	operator<=(const ft::pair<T1,T2>& x, const ft::pair<T1,T2>& y)
 	{
 		return (!(y < x));
 	}
