@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:36:56 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/29 03:07:42 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/29 17:20:31 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,12 @@
 
 #include "pair.hpp"
 #include "common.hpp"
+#include "algorithm.hpp"
 
 namespace ft
 {
+
+	enum AVLTree_pos { right = false, left = true };
 
 	template<class T>
 	struct node
@@ -31,6 +34,7 @@ namespace ft
 		typedef const value_type&	const_reference;
 		typedef struct node*		node_pointer;
 		
+		AVLTree_pos		color;
 		node_pointer	left;
 		node_pointer 	right;
 		node_pointer 	parent;
@@ -61,7 +65,7 @@ namespace ft
 			return (*this);
 		}
 	};
-
+	
 	template<typename T>
 	node<T>*	increment_tree_node(node<T>* n)
 	{
@@ -74,8 +78,11 @@ namespace ft
 		else
 		{
 			node<T>* tmp = n->parent;
+			
 			while (n == tmp->right)
 			{
+				if (!tmp->parent)
+					return (n);
 				n = tmp;
 				tmp = tmp->parent;
 			}
@@ -97,8 +104,17 @@ namespace ft
 		else
 		{
 			node<T>* tmp = n->parent;
+
 			while (n == tmp->left)
 			{
+				if (!tmp->parent)
+				{
+					while (n->parent)
+						n = n->parent;
+					while (n->right)
+						n = n->right;
+					return (n->parent);
+				}
 				n = tmp;
 				tmp = tmp->parent;
 			}
@@ -182,7 +198,7 @@ namespace ft
 		typedef AVLTree_iterator<T>			iterator;
       	typedef ptrdiff_t                 	difference_type;
 		typedef struct node<T>*				node_pointer;
-		typedef AVLTree_iterator<T>			self;
+		typedef AVLTree_const_iterator<T>	self;
 	
 		AVLTree_const_iterator() : current() {}
 
@@ -260,11 +276,17 @@ namespace ft
 			typedef ft::reverse_iterator<iterator>       						reverse_iterator;
 			typedef ft::reverse_iterator<const_iterator> 						const_reverse_iterator;
 		public:
-			AVLTree() : root(NULL), nodes_count(0), compare(), allocator() {}
-			
+			AVLTree() : root(NULL), left_eot(NULL), right_eot(NULL) , nodes_count(0), compare(), allocator()
+			{
+				this->default_eot = this->allocator.allocate(1);
+				this->default_eot->init(NULL, value_type(0, 0));
+			}
+
 			~AVLTree()
 			{
+				this->remove_eot();
 				this->destroy(this->root);
+				this->allocator.deallocate(this->default_eot, 1);
 			}
 		public:
 			node_pointer	find(node_pointer root, key_type key)
@@ -273,9 +295,9 @@ namespace ft
 					return (NULL);
 				if (root && root->value.first == key)
 					return (root);
-				else if (root->left != NULL && this->compare(key, root->value.first))
+				else if (root->left != NULL && this->left_eot != root->left && this->compare(key, root->value.first))
 					return (this->find(root->left, key));
-				else if (root->right != NULL)
+				else if (root->right != NULL && this->right_eot != root->right)
 					return (this->find(root->right, key));
 				else
 					return (NULL);
@@ -290,9 +312,9 @@ namespace ft
 			{
 				if (this->nodes_count == 0)
 					return (NULL);
-				if (root->left != NULL && this->compare(v.first, root->value.first))
+				if (root->left != NULL && this->left_eot != root->left && this->compare(v.first, root->value.first))
 					return (this->find_parent(root->left, v));
-				else if (root->right != NULL)
+				else if (root->right != NULL && this->right_eot != root->right)
 					return (this->find_parent(root->right, v));
 				else
 					return (root);
@@ -371,7 +393,6 @@ namespace ft
 						this->rotate_left(n->left);
 					this->rotate_right(n);
 				}
-				else
 				this->rebalance(n->parent);
 			}
 
@@ -382,6 +403,46 @@ namespace ft
 				while (n->right != NULL)
 					n = n->right;
 				return (n);
+			}
+
+			void			remove_eot()
+			{
+				if (this->right_eot)
+				{
+					this->right_eot->parent->right = NULL;
+					this->destroy_node(this->right_eot);
+					
+					this->right_eot = NULL;
+				}
+				if (this->left_eot)
+				{
+					this->left_eot->parent->left = NULL;
+					this->destroy_node(this->left_eot);
+
+					this->left_eot = NULL;
+				}
+			}
+
+			void			add_eot()
+			{
+				if (!this->right_eot)
+				{
+					node_pointer r = this->maximum();
+
+					r->right = this->allocator.allocate(1);
+					r->right->init(r, value_type(0, 0));
+
+					this->right_eot = r->right;
+				}
+				if (!this->left_eot)
+				{
+					node_pointer l = this->minimum();
+					
+					l->left = this->allocator.allocate(1);
+					l->left->init(l, value_type(0, 0));
+
+					this->left_eot = l->left;
+				}
 			}
 
 			node_pointer	maximum()
@@ -433,6 +494,8 @@ namespace ft
 					return (0);
 				node_pointer	potential_parent = this->find_parent(this->root, v);
 				node_pointer	new_node = this->allocator.allocate(1);
+				
+				this->remove_eot();
 				new_node->init(potential_parent, v);
 				if (new_node == NULL)
 					return (0);
@@ -444,6 +507,7 @@ namespace ft
 					potential_parent->right = new_node;
 				this->nodes_count++;
 				this->rebalance(new_node);
+				this->add_eot();
 				return (1);
 			}
 
@@ -453,6 +517,7 @@ namespace ft
 				
 				if (!(node = this->find(this->root, key)))
 					return (0);
+				this->remove_eot();
 				if (this->nodes_count > 1)
 				{
 					node_pointer max = this->maximum(node);
@@ -483,28 +548,33 @@ namespace ft
 				}
 				else
 					this->root = NULL;
-				
+				this->add_eot();
 				this->nodes_count--;
-				this->allocator.destroy(node);
-				this->allocator.deallocate(node, 1);
+				this->destroy_node(node);
 				return (1);
+			}
+
+			void		destroy_node(node_pointer n)
+			{
+				this->allocator.destroy(n);
+				this->allocator.deallocate(n, 1);
 			}
 
 			void		destroy(node_pointer n)
 			{
 				if (n == NULL) return ;
-
+				
 				if (n->left != NULL)
 					destroy(n->left);
 				if (n->right != NULL)
 					destroy(n->right);
-				this->allocator.destroy(n);
-				this->allocator.deallocate(n, 1);
+				this->destroy_node(n);
 				this->nodes_count--;
 			}
 
 			void		destroy(void)
 			{
+				this->remove_eot();
 				this->destroy(this->root);
 				this->root = NULL;
 			}
@@ -518,12 +588,103 @@ namespace ft
 			{
 				return (this->allocator);
 			}
-		protected:
+
+			iterator 				begin()
+			{
+				return iterator(this->left_eot ? this->left_eot->parent : this->default_eot);
+			}
+
+			const_iterator			begin() const
+			{
+				return const_iterator(this->left_eot ? this->left_eot->parent : this->default_eot);
+			}
+			
+			iterator 				end()
+			{
+				return iterator(this->right_eot ? this->right_eot : this->default_eot);
+			}
+
+			const_iterator			end() const
+			{
+				return const_iterator(this->right_eot ? this->right_eot : this->default_eot);
+			}
+			
+			reverse_iterator		rend()
+			{
+				return reverse_iterator(this->begin());
+			}
+			
+			const_reverse_iterator 	rend() const
+			{
+				return const_reverse_iterator(this->begin());
+			}
+
+			reverse_iterator 		rbegin() 
+			{
+				return reverse_iterator(this->end());
+			}
+
+			const_reverse_iterator 	rbegin() const
+			{
+				return const_reverse_iterator(this->end());
+			}
+		public:
 			node_pointer		root;
+			node_pointer		default_eot;
+			node_pointer		left_eot;
+			node_pointer		right_eot;
 			size_type			nodes_count;
 			key_compare			compare;
 			node_allocator_type	allocator;
 	};
+
+	template<class V, class T, class Key, class Compare>
+    inline bool operator==(const AVLTree<V, T, Key, Compare>& x, const AVLTree<V, T, Key, Compare>& y)
+    {
+      return (x.size() == y.size() && ft::equal(x.begin(), x.end(), y.begin()));
+    }
+
+	template<class V, class T, class Key, class Compare>
+    inline bool operator<(const AVLTree<V, T, Key, Compare>& x, const AVLTree<V, T, Key, Compare>& y)
+    {
+      return (ft::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()));
+    }
+
+	template<class V, class T, class Key, class Compare>
+    inline bool operator!=(const AVLTree<V, T, Key, Compare>& x, const AVLTree<V, T, Key, Compare>& y)
+    {
+      return (!(x == y));
+    }
+
+	template<class V, class T, class Key, class Compare>
+    inline bool operator>(const AVLTree<V, T, Key, Compare>& x, const AVLTree<V, T, Key, Compare>& y)
+    {
+      return (y < x);
+    }
+
+	template<class V, class T, class Key, class Compare>
+    inline bool operator>=(const AVLTree<V, T, Key, Compare>& x, const AVLTree<V, T, Key, Compare>& y)
+    {
+      return (!(x < y));
+    }
+
+	template<class V, class T, class Key, class Compare>
+    inline bool operator<=(const AVLTree<V, T, Key, Compare>& x, const AVLTree<V, T, Key, Compare>& y)
+    {
+      return (!(y < x));
+    }
+
+	template<typename T>
+    inline bool	operator==(const AVLTree_iterator<T>& x, const AVLTree_iterator<T>& y)
+    {
+		return x.current == y.current;
+	}
+
+  	template<typename T>
+    inline bool	operator!=(const AVLTree_const_iterator<T>& x, const AVLTree_const_iterator<T>& y)
+    {
+		return x.current != y.current;
+	}
 
 }
 

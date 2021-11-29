@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/29 03:15:30 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/29 17:20:47 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,12 +61,38 @@ namespace ft
 			// MEMBERS FUNCTIONS
 			map() : tree(), allocator() {}
 			
+			template<class InputIt>
+			map(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator()) : tree(), allocator(alloc)
+			{
+				(void)comp;
+				while (first != last)
+				{
+					this->insert(*first);
+					++first;
+				}
+					
+			}
+
+			map(const map& other) : tree(), allocator()
+			{
+				if (*this != other)
+					*this = other;
+			}
+
 			~map() {}
 
 			allocator_type	get_allocator() const
 			{
 				return (this->allocator);
 			}
+
+			map&	operator=(const map& other)
+			{
+				if (*this != other)
+					this->_copy(other.begin(), other.end());
+				return (*this);
+			}
+
 			
 			// ELEMENT ACCESS
 			T&			at(const key_type& key)
@@ -89,7 +115,11 @@ namespace ft
 
 			T&			operator[](const key_type& key)
 			{
-				return (this->tree.find(key)->value.second);
+				node_pointer n = this->tree.find(key);
+
+				if (n != NULL)
+					return (n->value.second);
+				return (this->insert(ft::make_pair(key, T())).first->second);
 			}
 			
 			// CAPACITY
@@ -111,22 +141,22 @@ namespace ft
 			// ITERATORS
 			iterator 				begin()
 			{
-				return iterator(this->tree.root->parent);
+				return iterator(this->tree.left_eot ? this->tree.left_eot->parent : this->tree.default_eot);
 			}
 
 			const_iterator			begin() const
 			{
-				return const_iterator(this->tree.root->parent);
+				return const_iterator(this->tree.left_eot ? this->tree.left_eot->parent : this->tree.default_eot);
 			}
 			
 			iterator 				end()
 			{
-				return iterator(this->tree.root);
+				return iterator(this->tree.right_eot ? this->tree.right_eot : this->tree.default_eot);
 			}
 
 			const_iterator			end() const
 			{
-				return const_iterator(this->tree.root);
+				return const_iterator(this->tree.right_eot ? this->tree.right_eot : this->tree.default_eot);
 			}
 			
 			reverse_iterator		rend()
@@ -245,10 +275,58 @@ namespace ft
 			{
 				return (map::value_compare());
 			}
-		private:
+		public:
 			avl_tree		tree;
+		private:
 			allocator_type	allocator;
+
+			template<class InputIt>
+			void			_copy(InputIt first, InputIt last)
+			{
+				this->tree.destroy();
+				while (first != last)
+				{
+					this->insert(*first);
+					++first;
+				}
+			}
 	};
+
+	template<class Key, class T, class Compare, class Allocator>
+	inline bool	operator==(const ft::map<Key, T, Compare, Allocator>& lhs, const ft::map<Key, T, Compare, Allocator>& rhs)
+	{
+		return (lhs.tree == rhs.tree);
+	}
+
+	template<class Key, class T, class Compare, class Allocator>
+	inline bool	operator<(const ft::map<Key, T, Compare, Allocator>& lhs, const ft::map<Key, T, Compare, Allocator>& rhs)
+	{
+		return (lhs.tree < rhs.tree);
+	}
+
+	template<class Key, class T, class Compare, class Allocator>
+	inline bool	operator!=(const ft::map<Key, T, Compare, Allocator>& lhs, const ft::map<Key, T, Compare, Allocator>& rhs)
+	{
+		return (!(lhs.tree == rhs.tree));
+	}
+
+	template<class Key, class T, class Compare, class Allocator>
+	inline bool	operator>(const ft::map<Key, T, Compare, Allocator>& lhs, const ft::map<Key, T, Compare, Allocator>& rhs)
+	{
+		return (rhs.tree < lhs.tree);
+	}
+
+	template<class Key, class T, class Compare, class Allocator>
+	inline bool	operator<=(const ft::map<Key, T, Compare, Allocator>& lhs, const ft::map<Key, T, Compare, Allocator>& rhs)
+	{
+		return (!(rhs.tree < lhs.tree));
+	}
+
+	template<class Key, class T, class Compare, class Allocator>
+	inline bool	operator>=(const ft::map<Key, T, Compare, Allocator>& lhs, const ft::map<Key, T, Compare, Allocator>& rhs)
+	{
+		return (!(lhs.tree < rhs.tree));
+	}
 
 	template< class Key, class T, class Compare, class Allocator>
 	void swap(ft::map<Key, T, Compare, Allocator>& lhs, ft::map<Key,T,Compare,Allocator>& rhs)
