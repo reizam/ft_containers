@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/28 11:45:00 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/29 03:15:30 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,9 +107,50 @@ namespace ft
 			{
 				return (this->tree.allocator.max_size());
 			}
+			
+			// ITERATORS
+			iterator 				begin()
+			{
+				return iterator(this->tree.root->parent);
+			}
+
+			const_iterator			begin() const
+			{
+				return const_iterator(this->tree.root->parent);
+			}
+			
+			iterator 				end()
+			{
+				return iterator(this->tree.root);
+			}
+
+			const_iterator			end() const
+			{
+				return const_iterator(this->tree.root);
+			}
+			
+			reverse_iterator		rend()
+			{
+				return reverse_iterator(this->begin());
+			}
+			
+			const_reverse_iterator 	rend() const
+			{
+				return const_reverse_iterator(this->begin());
+			}
+
+			reverse_iterator 		rbegin() 
+			{
+				return reverse_iterator(this->end());
+			}
+
+			const_reverse_iterator 	rbegin() const
+			{
+				return const_reverse_iterator(this->end());
+			}
 
 			// MODIFIERS
-			void		clear()
+			void						clear()
 			{
 				this->tree.destroy();
 			}
@@ -120,10 +161,100 @@ namespace ft
 
 				return (ft::make_pair<iterator, bool>(iterator(this->tree.find(value.first)), inserted));
 			}
+
+			iterator					insert(iterator hint, const value_type& value)
+			{
+				(void)hint;
+				(void)value;
+				return (iterator());
+			}
+
+			void						erase(iterator pos)
+			{
+				this->tree.remove((*pos).first);
+			}
+
+			void						erase(iterator first, iterator last)
+			{
+				for(;first != last;++first)
+					this->tree.remove((*first).first);
+			}
+
+			void						swap(map &other)
+			{
+				ft::swap(&this->tree, &other.tree);
+			}
+			
+			// LOOKUP
+			size_type								count(const key_type& key)
+			{
+				return (this->tree.find(key) == NULL ? 0 : 1);
+			}
+
+			iterator								find(const key_type& key)
+			{
+				node_pointer n = this->find(key);
+
+				return (n == NULL ? this->end() : iterator(n));
+			}
+			
+			const_iterator							find(const key_type& key) const
+			{
+				node_pointer n = this->find(key);
+
+				return (n == NULL ? this->end() : const_iterator(n));
+			}
+
+			iterator								lower_bound(const Key& key)
+			{
+				return (iterator(this->tree.lower_bound(*(this->begin(), *(this->end()), key))));
+			}
+
+			const_iterator							lower_bound(const Key& key) const
+			{
+				return (const_iterator(this->tree.lower_bound(*(this->begin(), *(this->end()), key))));
+			}
+
+			iterator								upper_bound(const Key& key)
+			{
+				return (iterator(this->tree.upper_bound(*(this->begin(), *(this->end()), key))));
+			}
+
+			const_iterator							upper_bound(const Key& key) const
+			{
+				return (const_iterator(this->tree.upper_bound(*(this->begin(), *(this->end()), key))));
+			}
+
+			ft::pair<iterator,iterator>				equal_range(const Key& key)
+			{
+				return (ft::make_pair<iterator, iterator>(this->lower_bound(key), this->upper_bound(key)));
+			}
+
+			ft::pair<const_iterator,const_iterator>	equal_range(const Key& key) const
+			{
+				return (ft::make_pair<const_iterator, const_iterator>(this->lower_bound(key), this->upper_bound(key)));
+			}
+			
+			// OBSERVERS
+			key_compare key_comp()
+			{
+				return (key_compare());
+			}
+
+			map::value_compare value_comp() const
+			{
+				return (map::value_compare());
+			}
 		private:
 			avl_tree		tree;
 			allocator_type	allocator;
 	};
+
+	template< class Key, class T, class Compare, class Allocator>
+	void swap(ft::map<Key, T, Compare, Allocator>& lhs, ft::map<Key,T,Compare,Allocator>& rhs)
+	{
+		lhs.swap(rhs);
+	}
 };
 
 #endif

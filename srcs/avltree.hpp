@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:36:56 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/28 11:51:26 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/29 03:07:42 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -283,7 +283,6 @@ namespace ft
 		
 			node_pointer	find(const key_type& key)
 			{
-				std::cout << root->value.first << ", " << root->value.second << ", current_key: " << key << std::endl;
 				return (this->find(this->root, key));
 			}
 			
@@ -385,6 +384,11 @@ namespace ft
 				return (n);
 			}
 
+			node_pointer	maximum()
+			{
+				return (this->maximum(this->root));
+			}
+
 			node_pointer	minimum(node_pointer n)
 			{
 				if (n == NULL)
@@ -392,7 +396,36 @@ namespace ft
 				while (n->left != NULL)
 					n = n->left;
 				return (n);
-			}	
+			}
+
+			node_pointer	minimum()
+			{
+				return (this->minimum(this->root));
+			}
+
+			node_pointer	lower_bound(node_pointer begin, node_pointer end, const Key& key)
+			{
+				while (begin != 0)
+				{
+					if (!this->compare(begin->value.first, key))
+						end = begin, begin = begin->left;
+					else
+						begin = begin->right;
+				}
+				return (end);
+			}
+
+			node_pointer	upper_bound(node_pointer begin, node_pointer end, const Key& key)
+			{
+				while (begin != 0)
+				{
+					if (this->compare(key, begin->value.first))
+						end = begin, begin = begin->left;
+					else
+						begin = begin->right;
+				}
+				return (end);
+			}
 
 			int		insert(const_reference v)
 			{
@@ -467,6 +500,7 @@ namespace ft
 					destroy(n->right);
 				this->allocator.destroy(n);
 				this->allocator.deallocate(n, 1);
+				this->nodes_count--;
 			}
 
 			void		destroy(void)

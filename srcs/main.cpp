@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 08:46:52 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/28 11:52:20 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/28 11:59:52 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,17 +32,8 @@ int main(void)
 	map.insert(ft::make_pair<const int, std::string>(13, "orange"));
 	map.insert(ft::make_pair<const int, std::string>(14, "orange"));
 	map.insert(ft::make_pair<const int, std::string>(15, "orange"));
-	ft::pair<ft::map<int, std::string>::iterator, bool> p = map.insert(ft::make_pair<const int, std::string>(7, "orange2"));
 	
-	ft::map<int, std::string>::iterator it = p.first;
+	map.clear();
 
-	(void)it;
-	++it;
-	++it;
-	++it;
-	--it;
-	--it;
-	--it;
-	--it;
-	std::cout <<"inserted: " << (p.second == 1 ? "yes" : "no") << " value: " << (*it).second << " id: " << (*it).first  << std::endl;
+	map.insert(ft::make_pair<const int, std::string>(9, "pomme de la vie"));
 }
