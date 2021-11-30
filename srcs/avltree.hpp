@@ -316,6 +316,7 @@ namespace ft
 			{
 				if (this->nodes_count == 0)
 					return (NULL);
+				std::cout << "JE VOIS LA VIE EN ROSE\n";
 				if (this->compare(v.first, root->value.first))
 				{
 					if (root->left == NULL)
@@ -533,7 +534,7 @@ namespace ft
 				this->remove_eot();
 				node_pointer	potential_parent = this->find_parent(this->root, v);
 				node_pointer	new_node = this->allocator.allocate(1);
-				
+
 				new_node->init(potential_parent, v);
 				if (new_node == NULL)
 					return (0);

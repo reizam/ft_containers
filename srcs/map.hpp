@@ -225,24 +225,37 @@ namespace ft
 			}
 			
 			// LOOKUP
-			size_type								count(const key_type& key)
+			size_type								count(const key_type& key) const
 			{
-				return (this->tree.find(key) == NULL ? 0 : 1);
+				return (this->find(key) == NULL ? 0 : 1);
 			}
 
 			iterator								find(const key_type& key)
 			{
-				node_pointer n = this->find(key);
+				iterator it = this->begin();
 
-				return (n == NULL ? this->end() : iterator(n));
+				while (it != this->end())
+				{
+					if (it->first == key)
+						return (it);
+					++it;
+				}
+				return (this->end());
 			}
-			
-			// const_iterator							find(const key_type& key) const
-			// {
-			// 	node_pointer n = this->find(key);
 
-			// 	return (n == NULL ? this->end() : const_iterator(n));
-			// }
+			
+			const_iterator							find(const key_type& key) const
+			{
+				iterator it = this->begin();
+
+				while (it != this->end())
+				{
+					if (it->first == key)
+						return (const_iterator(it));
+					++it;
+				}
+				return (this->end());
+			}
 
 			iterator								lower_bound(const Key& key)
 			{
