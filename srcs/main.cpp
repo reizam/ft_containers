@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:47:31 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/29 17:07:33 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/29 17:59:34 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,15 +26,13 @@
 
 #include <map>
 
-#define T1 char
-#define T2 int
-typedef TESTED_NAMESPACE::pair<const T1, T2> T3;
+#define T1 int
+#define T2 std::string
+typedef TESTED_NAMESPACE::map<T1, T2>::value_type T3;
+typedef TESTED_NAMESPACE::map<T1, T2>::iterator iterator;
+#define _pair TESTED_NAMESPACE::pair
+static int iter = 0;
 
-template <class T>
-void	is_empty(T const &mp)
-{
-	std::cout << "is_empty: " << mp.empty() << std::endl;
-}
 
 template <typename T>
 std::string	printPair(const T &iterator, bool nl = true, std::ostream &o = std::cout)
@@ -59,42 +57,52 @@ void	printSize(T_MAP const &mp, bool print_content = 1)
 	}
 	std::cout << "###############################################" << std::endl;
 }
+template <typename MAP, typename U>
+void	ft_insert(MAP &mp, U param)
+{
+	_pair<iterator, bool> tmp;
+
+	std::cout << "\t-- [" << iter++ << "] --" << std::endl;
+	tmp = mp.insert(param);
+	std::cout << "insert return: " << printPair(tmp.first);
+	std::cout << "Created new node: " << tmp.second << std::endl;
+	printSize(mp);
+}
+
+template <typename MAP, typename U, typename V>
+void	ft_insert(MAP &mp, U param, V param2)
+{
+	iterator tmp;
+
+	std::cout << "\t-- [" << iter++ << "] --" << std::endl;
+	tmp = mp.insert(param, param2);
+	std::cout << "insert return: " << printPair(tmp);
+	printSize(mp);
+}
 
 #include <list>
 #include <iostream>
 
 void	test(void)
 {
-std::list<T3> lst;
-	unsigned int lst_size = 7;
-	for (unsigned int i = 0; i < lst_size; ++i)
-		lst.push_back(T3(lst_size - i, i));
+	TESTED_NAMESPACE::map<int, std::string> mp;
+(void)iter;
 
-	TESTED_NAMESPACE::map<T1, T2> mp(lst.begin(), lst.end());
-	TESTED_NAMESPACE::map<T1, T2>::iterator it = mp.begin(), ite = mp.end();
+	// ft_insert(mp, T3(42, "lol"));
+	// ft_insert(mp, T3(42, "mdr"));
 
-	TESTED_NAMESPACE::map<T1, T2> mp_range(it, --(--ite));
-	for (int i = 0; it != ite; ++it)
-		it->second = ++i * 5;
+	// ft_insert(mp, T3(50, "mdr"));
+	// ft_insert(mp, T3(35, "funny"));
 
-	it = mp.begin(); ite = --(--mp.end());
-	TESTED_NAMESPACE::map<T1, T2> mp_copy(mp);
-	for (int i = 0; it != ite; ++it)
-		it->second = ++i * 7;
+	// ft_insert(mp, T3(45, "bunny"));
+	// ft_insert(mp, T3(21, "fizz"));
+	// ft_insert(mp, T3(38, "buzz"));
 
-	std::cout << "\t-- PART ONE --" << std::endl;
-	printSize(mp);
-	printSize(mp_range);
-	printSize(mp_copy);
+	// ft_insert(mp, mp.begin(), T3(55, "fuzzy"));
 
-	mp = mp_copy;
-	mp_copy = mp_range;
-	mp_range.clear();
-
-	std::cout << "\t-- PART TWO --" << std::endl;
-	printSize(mp);
-	printSize(mp_range);
-	printSize(mp_copy);
+	// ft_insert(mp2, mp2.begin(), T3(1337, "beauty"));
+	// ft_insert(mp2, mp2.end(), T3(1000, "Hello"));
+	// ft_insert(mp2, mp2.end(), T3(1500, "World"));
 }
 
 

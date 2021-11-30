@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/29 17:20:47 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/11/29 18:07:19 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,13 +28,13 @@ namespace ft
 		public:
 			typedef Key																		key_type;
 			typedef T																		mapped_type;
-			typedef ft::pair<Key, T>														value_type;
+			typedef ft::pair<const Key, T>													value_type;
 			typedef size_t																	size_type;
 			typedef ptrdiff_t																difference_type;
 			typedef Compare																	key_compare;
 			typedef ft::AVLTree<value_type, mapped_type, key_type, key_compare>				avl_tree;
 			typedef typename avl_tree::node_pointer											node_pointer;
-			typedef typename Allocator::template rebind<ft::pair<const Key, T> >::other		allocator_type;
+			typedef typename Allocator::template rebind<value_type>::other					allocator_type;
 			typedef typename allocator_type::reference										reference;
 			typedef typename allocator_type::const_reference								const_reference;
 			typedef typename allocator_type::pointer										pointer;
@@ -59,10 +59,10 @@ namespace ft
 			};
 		public:
 			// MEMBERS FUNCTIONS
-			map() : tree(), allocator() {}
+			map() : tree(), comp(), allocator() {}
 			
 			template<class InputIt>
-			map(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator()) : tree(), allocator(alloc)
+			map(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator()) : tree(), comp(comp), allocator(alloc)
 			{
 				(void)comp;
 				while (first != last)
@@ -73,7 +73,7 @@ namespace ft
 					
 			}
 
-			map(const map& other) : tree(), allocator()
+			map(const map& other) : tree(), comp(), allocator()
 			{
 				if (*this != other)
 					*this = other;
@@ -92,7 +92,6 @@ namespace ft
 					this->_copy(other.begin(), other.end());
 				return (*this);
 			}
-
 			
 			// ELEMENT ACCESS
 			T&			at(const key_type& key)
@@ -187,6 +186,7 @@ namespace ft
 			
 			ft::pair<iterator, bool>	insert(const value_type& value)
 			{
+				std::cout << "WTF\n";
 				bool inserted = this->tree.insert(value) == 1 ? true : false;
 
 				return (ft::make_pair<iterator, bool>(iterator(this->tree.find(value.first)), inserted));
@@ -278,6 +278,7 @@ namespace ft
 		public:
 			avl_tree		tree;
 		private:
+			key_compare		comp;
 			allocator_type	allocator;
 
 			template<class InputIt>
