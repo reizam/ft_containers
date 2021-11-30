@@ -28,7 +28,7 @@ namespace ft
 		public:
 			typedef Key																		key_type;
 			typedef T																		mapped_type;
-			typedef ft::pair<const Key, T>													value_type;
+			typedef ft::pair<Key, T>														value_type;
 			typedef size_t																	size_type;
 			typedef ptrdiff_t																difference_type;
 			typedef Compare																	key_compare;
@@ -186,7 +186,6 @@ namespace ft
 			
 			ft::pair<iterator, bool>	insert(const value_type& value)
 			{
-				std::cout << "WTF\n";
 				bool inserted = this->tree.insert(value) == 1 ? true : false;
 
 				return (ft::make_pair<iterator, bool>(iterator(this->tree.find(value.first)), inserted));
@@ -195,8 +194,18 @@ namespace ft
 			iterator					insert(iterator hint, const value_type& value)
 			{
 				(void)hint;
-				(void)value;
-				return (iterator());
+				this->tree.insert(value);
+				return (iterator(this->tree.find(value.first)));
+			}
+
+			template<class InputIt>
+			void						insert(InputIt first, InputIt last)
+			{
+				while (first != last)
+				{
+					this->tree.insert(*first);
+					++first;
+				}
 			}
 
 			void						erase(iterator pos)
@@ -228,31 +237,56 @@ namespace ft
 				return (n == NULL ? this->end() : iterator(n));
 			}
 			
-			const_iterator							find(const key_type& key) const
-			{
-				node_pointer n = this->find(key);
+			// const_iterator							find(const key_type& key) const
+			// {
+			// 	node_pointer n = this->find(key);
 
-				return (n == NULL ? this->end() : const_iterator(n));
-			}
+			// 	return (n == NULL ? this->end() : const_iterator(n));
+			// }
 
 			iterator								lower_bound(const Key& key)
 			{
-				return (iterator(this->tree.lower_bound(*(this->begin(), *(this->end()), key))));
+				iterator it = --(this->end());
+
+				for (;it != this->begin();--it)
+					if (!this->tree.compare(key, it->first))
+						break ;
+				return (it);
 			}
 
 			const_iterator							lower_bound(const Key& key) const
 			{
-				return (const_iterator(this->tree.lower_bound(*(this->begin(), *(this->end()), key))));
+				iterator it = --(this->end());
+				
+				for (;it != this->begin();--it)
+					if (!this->tree.compare(key, it->first))
+						break ;
+				return (const_iterator(it));
 			}
 
 			iterator								upper_bound(const Key& key)
 			{
-				return (iterator(this->tree.upper_bound(*(this->begin(), *(this->end()), key))));
+				iterator it = this->begin();
+
+				for (;it != this->end();++it)
+					if (this->tree.compare(key, it->first))
+						break ;
+				// todo: return end with value_type key: end_value_type, and value: NULL(0)
+				if (it == this->end())
+					return (iterator(--(this->end())));
+				return (it);
 			}
 
 			const_iterator							upper_bound(const Key& key) const
 			{
-				return (const_iterator(this->tree.upper_bound(*(this->begin(), *(this->end()), key))));
+				iterator it = this->begin();
+
+				for (;it != this->end();++it)
+					if (this->tree.compare(key, it->first))
+						break ;
+				if (it == this->end())
+					return (const_iterator(--(this->end())));
+				return (const_iterator(it));
 			}
 
 			ft::pair<iterator,iterator>				equal_range(const Key& key)
@@ -266,14 +300,14 @@ namespace ft
 			}
 			
 			// OBSERVERS
-			key_compare key_comp()
+			key_compare key_comp() const
 			{
-				return (key_compare());
+				return (this->comp);
 			}
 
 			map::value_compare value_comp() const
 			{
-				return (map::value_compare());
+				return (map::value_compare(this->comp));
 			}
 		public:
 			avl_tree		tree;

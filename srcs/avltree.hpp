@@ -133,10 +133,13 @@ namespace ft
       	typedef ptrdiff_t                 	difference_type;
 		typedef struct node<T>*				node_pointer;
 		typedef AVLTree_iterator<T>			self;
-	
+
 		AVLTree_iterator() : current() {}
 
 		AVLTree_iterator(node_pointer src) : current(src) {}
+
+		template<class Iter>
+		AVLTree_iterator(const Iter& src) : current(src.current) {}
 
 		reference			operator*() const
 		{
@@ -279,13 +282,14 @@ namespace ft
 			AVLTree() : root(NULL), left_eot(NULL), right_eot(NULL) , nodes_count(0), compare(), allocator()
 			{
 				this->default_eot = this->allocator.allocate(1);
-				this->default_eot->init(NULL, value_type(0, 0));
+				this->default_eot->init(NULL, value_type());
 			}
 
 			~AVLTree()
 			{
 				this->remove_eot();
 				this->destroy(this->root);
+				this->allocator.destroy(this->default_eot);
 				this->allocator.deallocate(this->default_eot, 1);
 			}
 		public:
@@ -312,12 +316,18 @@ namespace ft
 			{
 				if (this->nodes_count == 0)
 					return (NULL);
-				if (root->left != NULL && this->left_eot != root->left && this->compare(v.first, root->value.first))
+				if (this->compare(v.first, root->value.first))
+				{
+					if (root->left == NULL)
+						return (root);
 					return (this->find_parent(root->left, v));
-				else if (root->right != NULL && this->right_eot != root->right)
-					return (this->find_parent(root->right, v));
+				}
 				else
-					return (root);
+				{
+					if (root->right == NULL)
+						return (root);
+					return (this->find_parent(root->right, v));
+				}
 			}
 			
 			int		max(int a, int b)
@@ -379,7 +389,7 @@ namespace ft
 			void	rebalance(node_pointer n)
 			{
 				if (n == NULL) return ;
-				
+
 				int	depth = this->depth(n->right) - this->depth(n->left);
 				if (depth == 2)
 				{
@@ -430,7 +440,7 @@ namespace ft
 					node_pointer r = this->maximum();
 
 					r->right = this->allocator.allocate(1);
-					r->right->init(r, value_type(0, 0));
+					r->right->init(r, value_type());
 
 					this->right_eot = r->right;
 				}
@@ -439,13 +449,18 @@ namespace ft
 					node_pointer l = this->minimum();
 					
 					l->left = this->allocator.allocate(1);
-					l->left->init(l, value_type(0, 0));
+					l->left->init(l, value_type());
 
 					this->left_eot = l->left;
 				}
 			}
 
 			node_pointer	maximum()
+			{
+				return (this->maximum(this->root));
+			}
+
+			node_pointer	maximum() const
 			{
 				return (this->maximum(this->root));
 			}
@@ -464,9 +479,32 @@ namespace ft
 				return (this->minimum(this->root));
 			}
 
+			node_pointer	minimum() const
+			{
+				return (this->minimum(this->root));
+			}
+
+			node_pointer	lower_bound(const Key& key)
+			{
+				if (!this->root)
+					return (NULL);
+				node_pointer 	begin = this->minimum()->parent;
+				node_pointer	end = this->maximum()->parent;
+				return (this->lower_bound(begin, end, key));
+			}
+
+			node_pointer	upper_bound(const Key& key)
+			{
+				if (!this->root)
+					return (NULL);
+				node_pointer 	begin = this->minimum()->parent;
+				node_pointer	end = this->maximum()->parent;
+				return (this->upper_bound(begin, end, key));
+			}
+
 			node_pointer	lower_bound(node_pointer begin, node_pointer end, const Key& key)
 			{
-				while (begin != 0)
+				while (begin != NULL && begin != this->left_eot && begin != this->right_eot)
 				{
 					if (!this->compare(begin->value.first, key))
 						end = begin, begin = begin->left;
@@ -478,7 +516,7 @@ namespace ft
 
 			node_pointer	upper_bound(node_pointer begin, node_pointer end, const Key& key)
 			{
-				while (begin != 0)
+				while (begin != NULL && begin != this->left_eot && begin != this->right_eot)
 				{
 					if (this->compare(key, begin->value.first))
 						end = begin, begin = begin->left;
@@ -492,10 +530,10 @@ namespace ft
 			{
 				if (this->find(this->root, v.first))
 					return (0);
+				this->remove_eot();
 				node_pointer	potential_parent = this->find_parent(this->root, v);
 				node_pointer	new_node = this->allocator.allocate(1);
 				
-				this->remove_eot();
 				new_node->init(potential_parent, v);
 				if (new_node == NULL)
 					return (0);
@@ -677,13 +715,13 @@ namespace ft
 	template<typename T>
     inline bool	operator==(const AVLTree_iterator<T>& x, const AVLTree_iterator<T>& y)
     {
-		return x.current == y.current;
+		return (x.current == y.current);
 	}
 
   	template<typename T>
     inline bool	operator!=(const AVLTree_const_iterator<T>& x, const AVLTree_const_iterator<T>& y)
     {
-		return x.current != y.current;
+		return (x.current != y.current);
 	}
 
 }
