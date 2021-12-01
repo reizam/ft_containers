@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/12/01 14:14:36 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 14:22:19 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -225,7 +225,10 @@ namespace ft
 
 			void						swap(map &other)
 			{
-				ft::swap(&this->tree, &other.tree);
+				ft::swap(&tree.root, &other.tree.root);
+				ft::swap(&tree.left_eot, &other.tree.left_eot);
+				ft::swap(&tree.right_eot, &other.tree.right_eot);
+				ft::swap(&tree.nodes_count, &other.tree.nodes_count);
 			}
 			
 			// LOOKUP
