@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/26 06:19:28 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/26 15:12:56 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 15:00:30 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -332,7 +332,7 @@ namespace ft
 				template<class InputIt>
 				void	create_storage(InputIt first, InputIt last, false_type)
 				{
-					this->create_storage(last - first);
+					this->create_storage(ft::iter_size(first, last));
 					for (InputIt it = first;it != last;it++)
 						this->allocator.construct(this->finish++, *it);
 				}
@@ -432,7 +432,7 @@ namespace ft
 				{
 					if (first == last) return ;
 
-					difference_type	diff = last - first;
+					difference_type	diff = ft::iter_size(first, last);
 					size_type		size = new_size(diff + this->size());
 					pointer			_start(this->allocator.allocate(size));
 					pointer			_finish(_start);
@@ -512,7 +512,7 @@ namespace ft
 				template<class InputIt>
 				void	assign_range(InputIt first, InputIt last)
 				{
-					size_type count = last - first;
+					size_type count = ft::iter_size(first, last);
 					size_type capacity = this->capacity();
 					
 					if (first == last) return ;
