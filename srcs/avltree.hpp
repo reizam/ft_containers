@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:36:56 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/29 18:00:09 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 11:35:14 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,28 +42,8 @@ namespace ft
 		
 		node() : left(NULL), right(NULL), parent(NULL), value(NULL) {}
 		node(const value_type &_value_type) : left(NULL), right(NULL), parent(NULL), value(_value_type) {}
+		node(node_pointer parent, const value_type &_value_type) : left(NULL), right(NULL), parent(parent), value(_value_type) {}
 		node(const node	&src) : left(src.left), right(src.right), parent(src.parent), value(src.value) {}
-
-		void	init(node_pointer parent, const_reference v)
-		{
-			this->parent = parent;
-			this->value = v;
-			this->left = NULL;
-			this->right = NULL;
-		}
-
-		node&	operator=(const node& src)
-		{
-			if (*this != src)
-			{
-				this->right = src.right;
-				this->left = src.left;
-				this->parent = src.parent;
-				this->color = src.color;
-				this->value = src.value;
-			}
-			return (*this);
-		}
 	};
 	
 	template<typename T>
@@ -281,19 +261,30 @@ namespace ft
 		public:
 			AVLTree() : root(NULL), left_eot(NULL), right_eot(NULL) , nodes_count(0), compare(), allocator()
 			{
-				this->default_eot = this->allocator.allocate(1);
-				this->default_eot->init(NULL, value_type());
+				this->create_eot();
 			}
 
 			~AVLTree()
 			{
-				this->remove_eot();
+				this->destroy_eot();
 				this->destroy(this->root);
-				this->allocator.destroy(this->default_eot);
-				this->allocator.deallocate(this->default_eot, 1);
 			}
 		public:
 			node_pointer	find(node_pointer root, key_type key)
+			{
+				if (this->nodes_count == 0)
+					return (NULL);
+				if (root && root->value.first == key)
+					return (root);
+				else if (root->left != NULL && this->left_eot != root->left && this->compare(key, root->value.first))
+					return (this->find(root->left, key));
+				else if (root->right != NULL && this->right_eot != root->right)
+					return (this->find(root->right, key));
+				else
+					return (NULL);
+			}
+
+			node_pointer	find(node_pointer root, key_type key) const
 			{
 				if (this->nodes_count == 0)
 					return (NULL);
@@ -311,12 +302,17 @@ namespace ft
 			{
 				return (this->find(this->root, key));
 			}
+
+			node_pointer	find(const key_type& key) const
+			{
+				return (this->find(this->root, key));
+			}
 			
 			node_pointer	find_parent(node_pointer root, const_reference v)
 			{
 				if (this->nodes_count == 0)
 					return (NULL);
-				std::cout << "JE VOIS LA VIE EN ROSE\n";
+
 				if (this->compare(v.first, root->value.first))
 				{
 					if (root->left == NULL)
@@ -416,7 +412,7 @@ namespace ft
 				return (n);
 			}
 
-			void			remove_eot()
+			void			destroy_eot()
 			{
 				if (this->right_eot)
 				{
@@ -434,27 +430,51 @@ namespace ft
 				}
 			}
 
-			void			add_eot()
+			void			create_eot()
 			{
 				if (!this->right_eot)
 				{
-					node_pointer r = this->maximum();
-
-					r->right = this->allocator.allocate(1);
-					r->right->init(r, value_type());
-
-					this->right_eot = r->right;
+					this->right_eot = this->allocator.allocate(1);
+					this->allocator.construct(this->right_eot, node(value_type()));
 				}
 				if (!this->left_eot)
 				{
-					node_pointer l = this->minimum();
-					
-					l->left = this->allocator.allocate(1);
-					l->left->init(l, value_type());
-
-					this->left_eot = l->left;
+					this->left_eot = this->allocator.allocate(1);
+					this->allocator.construct(this->left_eot, node(value_type()));
 				}
 			}
+
+			void			remove_eot()
+			{
+				if (this->right_eot && this->right_eot->parent)
+				{
+					this->right_eot->parent->right = NULL;
+					this->right_eot->parent = NULL;
+				}
+				if (this->left_eot && this->left_eot->parent)
+				{
+					this->left_eot->parent->left = NULL;
+					this->left_eot->parent = NULL;
+				}
+			}
+
+			void			add_eot()
+			{
+				node_pointer r = this->maximum();
+				node_pointer l = this->minimum();
+
+				if (r)
+				{
+					r->right = this->right_eot;
+					this->right_eot->parent = r;
+				}
+				if (l)
+				{
+					l->left = this->left_eot;
+					this->left_eot->parent = l;
+				}
+			}
+
 
 			node_pointer	maximum()
 			{
@@ -535,7 +555,7 @@ namespace ft
 				node_pointer	potential_parent = this->find_parent(this->root, v);
 				node_pointer	new_node = this->allocator.allocate(1);
 
-				new_node->init(potential_parent, v);
+				this->allocator.construct(new_node, node(potential_parent, v));
 				if (new_node == NULL)
 					return (0);
 				if (potential_parent == NULL)
@@ -669,7 +689,6 @@ namespace ft
 			}
 		public:
 			node_pointer		root;
-			node_pointer		default_eot;
 			node_pointer		left_eot;
 			node_pointer		right_eot;
 			size_type			nodes_count;

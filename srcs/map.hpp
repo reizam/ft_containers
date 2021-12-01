@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/29 18:07:19 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 11:17:13 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,22 +140,22 @@ namespace ft
 			// ITERATORS
 			iterator 				begin()
 			{
-				return iterator(this->tree.left_eot ? this->tree.left_eot->parent : this->tree.default_eot);
+				return iterator(this->tree.left_eot ? this->tree.left_eot->parent : this->tree.left_eot);
 			}
 
 			const_iterator			begin() const
 			{
-				return const_iterator(this->tree.left_eot ? this->tree.left_eot->parent : this->tree.default_eot);
+				return const_iterator(this->tree.left_eot ? this->tree.left_eot->parent : this->tree.left_eot);
 			}
 			
 			iterator 				end()
 			{
-				return iterator(this->tree.right_eot ? this->tree.right_eot : this->tree.default_eot);
+				return iterator(this->tree.right_eot ? this->tree.right_eot : this->tree.left_eot);
 			}
 
 			const_iterator			end() const
 			{
-				return const_iterator(this->tree.right_eot ? this->tree.right_eot : this->tree.default_eot);
+				return const_iterator(this->tree.right_eot ? this->tree.right_eot : this->tree.left_eot);
 			}
 			
 			reverse_iterator		rend()
@@ -227,34 +227,26 @@ namespace ft
 			// LOOKUP
 			size_type								count(const key_type& key) const
 			{
-				return (this->find(key) == NULL ? 0 : 1);
+				return (this->find(key) != this->end() ? 1 : 0);
 			}
 
 			iterator								find(const key_type& key)
 			{
-				iterator it = this->begin();
+				node_pointer n = this->tree.find(key);
 
-				while (it != this->end())
-				{
-					if (it->first == key)
-						return (it);
-					++it;
-				}
-				return (this->end());
+				if (n == NULL)
+					return (this->end());
+				return (iterator(n));
 			}
 
 			
 			const_iterator							find(const key_type& key) const
 			{
-				iterator it = this->begin();
+				node_pointer n = this->tree.find(key);
 
-				while (it != this->end())
-				{
-					if (it->first == key)
-						return (const_iterator(it));
-					++it;
-				}
-				return (this->end());
+				if (n == NULL)
+					return (this->end());
+				return (const_iterator(n));
 			}
 
 			iterator								lower_bound(const Key& key)

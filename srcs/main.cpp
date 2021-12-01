@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:47:31 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/29 17:59:34 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 10:50:36 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,39 +22,6 @@
 #else
 # include <map>
 #define TESTED_NAMESPACE std
-#endif
-
-#include <map>
-
-#ifdef FT_VERSION
-template <typename T>
-class foo {
-        public:
-                typedef T       value_type;
-
-                foo(void) : value(), _verbose(false) { };
-                foo(value_type src, const bool verbose = false) : value(src), _verbose(verbose) { };
-                foo(foo const &src, const bool verbose = false) : value(src.value), _verbose(verbose) { };
-                ~foo(void) { if (this->_verbose) std::cout << "~foo::foo()" << std::endl; };
-                void m(void) { std::cout << "foo::m called [" << this->value << "]" << std::endl; };
-                void m(void) const { std::cout << "foo::m const called [" << this->value << "]" << std::endl; };
-                foo &operator=(value_type src) { this->value = src; return *this; };
-                foo &operator=(foo const &src) {
-                        if (this->_verbose || src._verbose)
-                                std::cout << "foo::operator=(foo) CALLED" << std::endl;
-                        this->value = src.value;
-                        return *this;
-                };
-                value_type      getValue(void) const { return this->value; };
-                void            switchVerbose(void) { this->_verbose = !(this->_verbose); };
-
-                operator value_type(void) const {
-                        return value_type(this->value);
-                }
-        private:
-                value_type      value;
-                bool            _verbose;
-};
 #endif
 
 #define T1 int
@@ -108,7 +75,6 @@ void	ft_count(T1 const &k)
 void	test(void)
 {
 	mp[42] = "fgzgxfn";
-	std::cout << "HEY HEY HEY\n";
 	mp[25] = "funny";
 	mp[80] = "hey";
 	mp[12] = "no";

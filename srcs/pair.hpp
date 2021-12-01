@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:44:30 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/29 18:07:48 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 11:29:25 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,11 @@
 # define FT_PAIR_HPP
 
 #include "type_traits.hpp"
+#include <memory>
 
 namespace ft
 {
-	template<class T1, class T2>
+	template<typename T1, typename T2>
 	struct pair
 	{
 		typedef T1 first_type;
@@ -33,6 +34,8 @@ namespace ft
 		template<class U1, class U2>
 		pair(const pair<U1, U2>& p) : first(p.first), second(p.second) {}
 
+		pair(const pair& p) : first(p.first), second(p.second) {}
+		
 		pair&	operator=(const pair& other)
 		{
 			if (*this != other)
@@ -44,8 +47,8 @@ namespace ft
 		}
 	};
 
-	template<class T1, class T2>
-	ft::pair<T1, T2>	make_pair(T1 t1, T2 t2)
+	template<typename T1, typename T2>
+	inline ft::pair<T1, T2>	make_pair(T1 t1, T2 t2)
 	{
 		return (ft::pair<T1, T2>(t1, t2));
 	}
