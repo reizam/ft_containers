@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:36:56 by kmazier           #+#    #+#             */
-/*   Updated: 2021/12/01 13:51:21 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 14:26:35 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,9 +118,6 @@ namespace ft
 		AVLTree_iterator() : current() {}
 
 		AVLTree_iterator(node_pointer src) : current(src) {}
-
-		template<class Iter>
-		AVLTree_iterator(const Iter& src) : current(src.current) {}
 
 		reference			operator*() const
 		{

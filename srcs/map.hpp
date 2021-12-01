@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/12/01 14:22:19 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 14:43:43 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -270,8 +270,7 @@ namespace ft
 
 			const_iterator							lower_bound(const Key& key) const
 			{
-				iterator it = (--this->end());
-				
+				const_iterator it = (--this->end());
 				
 				for (;it != this->begin();--it)
 					if (!this->tree.compare(key, it->first))
@@ -295,7 +294,7 @@ namespace ft
 
 			const_iterator							upper_bound(const Key& key) const
 			{
-				iterator it = this->begin();
+				const_iterator it = this->begin();
 
 				for (;it != this->end();++it)
 					if (this->tree.compare(key, it->first))

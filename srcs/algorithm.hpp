@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 04:06:24 by kmazier           #+#    #+#             */
-/*   Updated: 2021/11/25 01:57:58 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 14:29:03 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,22 @@ namespace ft
 		}
 		return (true);
 	}
+	
+	template<class InputIt>
+	size_t		iter_size(InputIt first, InputIt last)
+	{
+		size_t i = 0;
+
+		for (;first != last;++first)
+			i++;
+		return (i);
+	}
 
 	template<class InputIt1, class InputIt2>
 	bool	lexicographical_compare(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 	{
-		size_t it1_size = last1 - first1;
-		size_t it2_size = last2 - first2;
+		size_t it1_size = iter_size(first1, last1);
+		size_t it2_size = iter_size(first2, last2);
 
 		if (it1_size == 0 && it2_size == 0)
 			return (false);
@@ -66,8 +76,8 @@ namespace ft
 	template<class InputIt1, class InputIt2, class Compare>
 	bool	lexicographical_compare(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Compare comp)
 	{
-		size_t it1_size = last1 - first1;
-		size_t it2_size = last2 - first2;
+		size_t it1_size = iter_size(first1, last1); 
+		size_t it2_size = iter_size(first2, last2);
 
 		if (it1_size == 0 && it2_size == 0)
 			return (false);
