@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/12/01 11:17:13 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 14:14:36 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,22 +140,22 @@ namespace ft
 			// ITERATORS
 			iterator 				begin()
 			{
-				return iterator(this->tree.left_eot ? this->tree.left_eot->parent : this->tree.left_eot);
+				return iterator(this->tree.left_eot->parent ? this->tree.left_eot->parent : this->tree.right_eot);
 			}
 
 			const_iterator			begin() const
 			{
-				return const_iterator(this->tree.left_eot ? this->tree.left_eot->parent : this->tree.left_eot);
+				return const_iterator(this->tree.left_eot->parent ? this->tree.left_eot->parent : this->tree.right_eot);
 			}
 			
 			iterator 				end()
 			{
-				return iterator(this->tree.right_eot ? this->tree.right_eot : this->tree.left_eot);
+				return iterator(this->tree.right_eot->parent ? this->tree.right_eot : this->tree.right_eot);
 			}
 
 			const_iterator			end() const
 			{
-				return const_iterator(this->tree.right_eot ? this->tree.right_eot : this->tree.left_eot);
+				return const_iterator(this->tree.right_eot->parent ? this->tree.right_eot : this->tree.right_eot);
 			}
 			
 			reverse_iterator		rend()
@@ -215,8 +215,12 @@ namespace ft
 
 			void						erase(iterator first, iterator last)
 			{
-				for(;first != last;++first)
-					this->tree.remove((*first).first);
+				this->tree.remove(first, last);
+			}
+
+			size_type					erase(const key_type& key)
+			{
+				return (this->tree.remove(key));	
 			}
 
 			void						swap(map &other)
@@ -251,21 +255,26 @@ namespace ft
 
 			iterator								lower_bound(const Key& key)
 			{
-				iterator it = --(this->end());
+				iterator it = (--this->end());
 
 				for (;it != this->begin();--it)
 					if (!this->tree.compare(key, it->first))
 						break ;
+				if ((--this->end()) == it && key != it->first)
+					return (this->end());
 				return (it);
 			}
 
 			const_iterator							lower_bound(const Key& key) const
 			{
-				iterator it = --(this->end());
+				iterator it = (--this->end());
+				
 				
 				for (;it != this->begin();--it)
 					if (!this->tree.compare(key, it->first))
 						break ;
+				if ((--this->end()) == it && key != it->first)
+					return (this->end());
 				return (const_iterator(it));
 			}
 
@@ -276,9 +285,8 @@ namespace ft
 				for (;it != this->end();++it)
 					if (this->tree.compare(key, it->first))
 						break ;
-				// todo: return end with value_type key: end_value_type, and value: NULL(0)
 				if (it == this->end())
-					return (iterator(--(this->end())));
+					return (iterator((this->end())));
 				return (it);
 			}
 
@@ -290,7 +298,7 @@ namespace ft
 					if (this->tree.compare(key, it->first))
 						break ;
 				if (it == this->end())
-					return (const_iterator(--(this->end())));
+					return (const_iterator(this->end()));
 				return (const_iterator(it));
 			}
 

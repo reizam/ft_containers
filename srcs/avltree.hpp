@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:36:56 by kmazier           #+#    #+#             */
-/*   Updated: 2021/12/01 11:35:14 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/01 13:51:21 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 
 #include "pair.hpp"
 #include "common.hpp"
+#include "vector.hpp"
 #include "algorithm.hpp"
 
 namespace ft
@@ -414,18 +415,15 @@ namespace ft
 
 			void			destroy_eot()
 			{
+				this->remove_eot();
 				if (this->right_eot)
 				{
-					this->right_eot->parent->right = NULL;
 					this->destroy_node(this->right_eot);
-					
 					this->right_eot = NULL;
 				}
 				if (this->left_eot)
 				{
-					this->left_eot->parent->left = NULL;
 					this->destroy_node(this->left_eot);
-
 					this->left_eot = NULL;
 				}
 			}
@@ -570,16 +568,30 @@ namespace ft
 				return (1);
 			}
 
+			int		remove(iterator first, iterator last)
+			{
+				// temp solution, make better solution !
+				vector<key_type> v;
+
+				for (;first != last;++first)
+					v.push_back(first->first);
+				for (typename vector<Key>::iterator it = v.begin();it != v.end();++it)
+					this->remove(*it);
+				return (1);
+			}
+
 			int		remove(key_type key)
 			{
 				node_pointer node;
-				
+				node_pointer node_parent;
+
 				if (!(node = this->find(this->root, key)))
 					return (0);
 				this->remove_eot();
+				node_parent = node->parent;
 				if (this->nodes_count > 1)
 				{
-					node_pointer max = this->maximum(node);
+					node_pointer max = this->maximum(node->left);
 
 					if (max == NULL)
 					{
@@ -603,7 +615,7 @@ namespace ft
 							max->left->parent = max->parent;
 						node = max;
 					}
-					this->rebalance(node->parent);
+					this->rebalance(node_parent);
 				}
 				else
 					this->root = NULL;
@@ -650,22 +662,22 @@ namespace ft
 
 			iterator 				begin()
 			{
-				return iterator(this->left_eot ? this->left_eot->parent : this->default_eot);
+				return iterator(this->left_eot ? this->left_eot->parent : this->left_eot);
 			}
 
 			const_iterator			begin() const
 			{
-				return const_iterator(this->left_eot ? this->left_eot->parent : this->default_eot);
+				return const_iterator(this->left_eot ? this->left_eot->parent : this->left_eot);
 			}
 			
 			iterator 				end()
 			{
-				return iterator(this->right_eot ? this->right_eot : this->default_eot);
+				return iterator(this->right_eot ? this->right_eot : this->left_eot);
 			}
 
 			const_iterator			end() const
 			{
-				return const_iterator(this->right_eot ? this->right_eot : this->default_eot);
+				return const_iterator(this->right_eot ? this->right_eot : this->left_eot);
 			}
 			
 			reverse_iterator		rend()
