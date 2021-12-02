@@ -20,7 +20,7 @@ namespace ft
 	{
 		while (first1 != last1)
 		{
-			if (!(*first1 == *first2))
+			if (!(first1 == first2))
 				return (false);
 			++first2;
 			++first1;
@@ -33,7 +33,7 @@ namespace ft
 	{
 		while (first1 != last1)
 		{
-			if (!bool(p(*first1, *first2)))
+			if (!bool(p(first1, first2)))
 				return (false);
 			++first2;
 			++first1;
@@ -65,7 +65,7 @@ namespace ft
 			return (false);
 		while (first1 != last1 && first2 != last2)
 		{
-			if (*first1 != *first2)
+			if (first1 != first2)
 				return (*first1 < *first2);
 			++first2;
 			++first1;
@@ -87,7 +87,7 @@ namespace ft
 			return (false);
 		while (first1 != last1 && first2 != last2)
 		{
-			if (*first1 != *first2)
+			if (first1 != first2)
 				return (comp(*first1, *first2));
 			++first2;
 			++first1;
