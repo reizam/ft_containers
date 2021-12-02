@@ -75,7 +75,7 @@ namespace ft
 
 			vector	&		operator=(const vector &other)
 			{
-				if (*this != other)
+				if (*this != other)false
 					this->copy(other);
 				return (*this);
 			}
