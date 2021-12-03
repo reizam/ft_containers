@@ -11,117 +11,210 @@
 /* ************************************************************************** */
 
 #include <iostream>
-#include <string>
-#include <deque>
-#if 0 //CREATE A REAL STL EXAMPLE
-	#include <map>
-	#include <stack>
-	#include <vector>
-	namespace ft = std;
-#else
-	#include "map.hpp"
-	#include "stack.hpp"
-	#include "vector.hpp"
+#include <exception>
+
+#ifndef FT_VERSION
+# define FT_VERSION 1
 #endif
 
-#include <stdlib.h>
+#if FT_VERSION == 1
+	#define TESTED_NAMESPACE ft
+	#include "map.hpp"
+	#include "vector.hpp"
+	#include "stack.hpp"
+#else
+	#define TESTED_NAMESPACE std
+	#include <map>
+	#include <vector>
+	#include <stack>
+#endif
 
-#define MAX_RAM 4294967296
-#define BUFFER_SIZE 4096
-struct Buffer
+void	test_vector(void)
 {
-	int idx;
-	char buff[BUFFER_SIZE];
-};
-
-#define COUNT (MAX_RAM / (int)sizeof(Buffer))
-
-template<typename T>
-class MutantStack : public ft::stack<T>
-{
-public:
-	MutantStack() {}
-	MutantStack(const MutantStack<T>& src) { *this = src; }
-	MutantStack<T>& operator=(const MutantStack<T>& rhs) 
-	{
-		this->c = rhs.c;
-		return *this;
-	}
-	~MutantStack() {}
-
-	typedef typename ft::stack<T>::container_type::iterator iterator;
-
-	iterator begin() { return this->c.begin(); }
-	iterator end() { return this->c.end(); }
-};
-
-int main(int argc, char** argv) {
-	if (argc != 2)
-	{
-		std::cerr << "Usage: ./test seed" << std::endl;
-		std::cerr << "Provide a seed please" << std::endl;
-		std::cerr << "Count value:" << COUNT << std::endl;
-		return 1;
-	}
-	const int seed = atoi(argv[1]);
-	srand(seed);
-
-	ft::vector<std::string> vector_str;
-	ft::vector<int> vector_int;
-	ft::stack<int> stack_int;
-	ft::vector<Buffer> vector_buffer;
-	ft::stack<Buffer, std::deque<Buffer> > stack_deq_buffer;
-	ft::map<int, int> map_int;
-
-	for (int i = 0; i < COUNT; i++)
-	{
-		vector_buffer.push_back(Buffer());
-	}
-
-	for (int i = 0; i < COUNT; i++)
-	{
-		const int idx = rand() % COUNT;
-		vector_buffer[idx].idx = 5;
-	}
-	ft::vector<Buffer>().swap(vector_buffer);
-
-	try
-	{
-		for (int i = 0; i < COUNT; i++)
-		{
-			const int idx = rand() % COUNT;
-			vector_buffer.at(idx);
-			std::cerr << "Error: THIS VECTOR SHOULD BE EMPTY!!" <<std::endl;
-		}
-	}
-	catch(const std::exception& e)
-	{
-		//NORMAL ! :P
-	}
+	TESTED_NAMESPACE::vector<int> vct;
 	
-	for (int i = 0; i < COUNT; ++i)
-	{
-		map_int.insert(ft::make_pair(rand(), rand()));
-	}
+	// PUSH_BACK/POP_BACK/FRONT/BACK/EMPTY
+	vct.push_back(10);
+	vct.push_back(20);
+	vct.pop_back();
+	vct.pop_back();
+	vct.push_back(10);
+	vct.push_back(28);
 
-	int sum = 0;
-	for (int i = 0; i < 10000; i++)
-	{
-		int access = rand();
-		sum += map_int[access];
-	}
-	std::cout << "should be constant with the same seed: " << sum << std::endl;
+	std::cout << "front: " << vct.front() << ", back: " << vct.back() << std::endl;
 
-	{
-		ft::map<int, int> copy = map_int;
-	}
-	MutantStack<char> iterable_stack;
-	for (char letter = 'a'; letter <= 'z'; letter++)
-		iterable_stack.push(letter);
-	for (MutantStack<char>::iterator it = iterable_stack.begin(); it != iterable_stack.end(); it++)
-	{
-		std::cout << *it;
-	}
-	std::cout << std::endl;
+	std::cout << "empty: " << vct.empty() << std::endl;
+
+	// CPY CONSTRUCTOR
+	TESTED_NAMESPACE::vector<int> vct2(vct);
+	
+	vct2.push_back(28);
+	vct2.push_back(1231232);
+
+	// ITERATOR
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct2.begin();it != vct2.end();++it)
+		std::cout << *it << std::endl;
+
+	// REVERSE ITERATOR
+	for (TESTED_NAMESPACE::vector<int>::reverse_iterator it = vct2.rbegin();it != vct2.rend();++it)
+		std::cout << *it << std::endl;
+	
+	// RESIZE, RESERVE, SIZE, CAPACITY, MAX_SIZE
+	vct.resize(10);
+
+	std::cout << "size: " << vct.size() << ", capacity: " << vct.capacity() << ", max_size" << vct.max_size() << std::endl;
+
+	vct.reserve(100);
+
+	std::cout << "size: " << vct.size() << ", capacity: " << vct.capacity() << ", max_size" << vct.max_size() << std::endl;
+
+	vct.resize(1);
+
+	std::cout << "size: " << vct.size() << ", capacity: " << vct.capacity() << ", max_size" << vct.max_size() << std::endl;
+
+	// ERASE, INSERT
+	vct.insert(vct.begin(), vct2.begin(), vct2.end());
+	vct.insert(vct.begin(), 1);
+
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct.begin();it != vct.end();++it)
+		std::cout << *it << std::endl;
+
+	vct.erase(vct.begin(), vct.begin() + 2);
+	
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct.begin();it != vct.end();++it)
+		std::cout << *it << std::endl;
+	
+	vct.erase(vct.begin(), vct.end() - 1);
+	vct.erase(vct.begin());
+
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct.begin();it != vct.end();++it)
+		std::cout << *it << std::endl;
+	
+	vct.insert(vct.begin(), vct2.begin(), vct2.end());
+	vct.insert(vct.begin(), vct2.begin(), vct2.end());
+	vct.insert(vct.begin(), vct2.begin(), vct2.end());
+
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct.begin();it != vct.end();++it)
+		std::cout << *it << std::endl;
+
+	// CLEAR
+	vct.clear();
+
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct.begin();it != vct.end();++it)
+		std::cout << *it << std::endl;
+
+	vct.insert(vct.begin(), vct2.begin(), vct2.end());
+	vct.insert(vct.begin(), vct2.begin(), vct2.end());
+	vct.insert(vct.begin(), vct2.begin(), vct2.end());
+
+
+	// OPERATOR []/AT
+	std::cout << vct[0] << ", " << vct[1] << ", " << vct.at(0) << ", " << vct.at(5) << std::endl;
+
+
+	// COPY
+	vct2 = vct;
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct.begin();it != vct.end();++it)
+		std::cout << *it << std::endl;
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct2.begin();it != vct2.end();++it)
+		std::cout << *it << std::endl;
+
+	// ASSIGN
+	vct2.assign(100, 0);
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct2.begin();it != vct2.end();++it)
+		std::cout << *it << std::endl;
+	vct.assign(1, 1);
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct.begin();it != vct.end();++it)
+		std::cout << *it << std::endl;
+
+	// SWAP
+	vct.swap(vct2);
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct2.begin();it != vct2.end();++it)
+		std::cout << *it << std::endl;
+	for (TESTED_NAMESPACE::vector<int>::iterator it = vct.begin();it != vct.end();++it)
+		std::cout << *it << std::endl;
+}
+
+void	test_map(void)
+{
+	TESTED_NAMESPACE::map<int, std::string> map;
+	TESTED_NAMESPACE::map<int, std::string> map2;
+
+	// OPERATOR []/AT
+	map[0] = "salut";
+	map[1] = "salut2";
+	map[2] = "la vie est belle";
+
+
+	std::cout << map[0] << ", " << map.at(1) << std::endl;
+	// CPY
+	map2 = map;
+
+	// EMPTY, SIZE, MAX_SIZE, CLEAR, CPY
+	std::cout << "empty: " << (map.empty()) << ", " << "size: " << map.size() << ", max_size: " << map.max_size() << std::endl;
+	map.clear();
+	std::cout << "empty: " << (map.empty()) << ", " << "size: " << map.size() << ", max_size: " << map.max_size() << std::endl;
+	map = map2;
+
+	// INSERT, ITERATOR
+	map.insert(map2.begin(), map2.end());
+	for (TESTED_NAMESPACE::map<int, std::string>::iterator it = map.begin();it != map.end();++it)
+		std::cout << it->first << ", " << it->second << std::endl;
+
+
+	// ERASE
+	map.erase(map.begin(), ++map.begin());
+	for (TESTED_NAMESPACE::map<int, std::string>::iterator it = map.begin();it != map.end();++it)
+		std::cout << it->first << ", " << it->second << std::endl;
+	map2.erase(map2.begin(), map2.end());
+	for (TESTED_NAMESPACE::map<int, std::string>::iterator it = map2.begin();it != map2.end();++it)
+		std::cout << it->first << ", " << it->second << std::endl;
+
+
+	// SWAP
+	map2[100] = "value";
+	map2.swap(map);
+	for (TESTED_NAMESPACE::map<int, std::string>::iterator it = map.begin();it != map.end();++it)
+		std::cout << it->first << ", " << it->second << std::endl;
+	for (TESTED_NAMESPACE::map<int, std::string>::iterator it = map2.begin();it != map2.end();++it)
+		std::cout << it->first << ", " << it->second << std::endl;
+	
+	// COUNT, FIND, EQUAL_RANGE, LOWER_BOUND, UPPER_BOUND
+	
+	std::cout << "count: " << map2.count(100) << ", " << map2.find(100)->second << std::endl;
+	std::cout << "empty: " << (map.empty()) << ", " << "size: " << map.size() << ", max_size: " << map.max_size() << std::endl;
+
+	std::cout << "equal_range: " << map.equal_range(100).first->first << std::endl;
+	// std::cout << "equal_range: " << map.equal_range(50).first->first << std::endl;
+}
+
+void	test_stack(void)
+{
+	TESTED_NAMESPACE::stack<int> stack;
+
+	// PUSH, POP
+	stack.push(10);
+	stack.push(27);
+	stack.push(30);
+	stack.pop();
+	stack.pop();
+	stack.push(28);
+	stack.push(954);
+
+	// CPY
+	TESTED_NAMESPACE::stack<int> stack2(stack);
+
+	// TOP
+	std::cout << stack.top() << std::endl;
+	std::cout << stack2.top() << std::endl;
+
+	// SIZE, EMPTY
+	std::cout << ", " << stack.size() << ", " << stack.empty() << std::endl;
+}
+
+int main(void)
+{
+	test_vector();
+	test_map();
 	return (0);
 }
