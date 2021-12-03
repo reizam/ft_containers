@@ -135,6 +135,40 @@ void	test_vector(void)
 		std::cout << *it << std::endl;
 }
 
+void	print_bounds(TESTED_NAMESPACE::map<int, std::string> m, int key)
+{
+	TESTED_NAMESPACE::map<int, std::string>::iterator lower_bound = m.lower_bound(key);
+	TESTED_NAMESPACE::map<int, std::string>::iterator upper_bound = m.upper_bound(key);
+	
+	std::cout << "with key: " << key << std::endl;
+
+	if (lower_bound == m.end())
+		std::cout << "lower_bound: end()" << std::endl;
+	else
+		std::cout << "lower_bound: " << lower_bound->first << std::endl;
+	if (upper_bound == m.end())
+		std::cout << "upper_bound: end()" << std::endl;
+	else
+		std::cout << "upper_bound: " << lower_bound->first << std::endl;
+}
+
+void	print_bounds(TESTED_NAMESPACE::map<std::string, int> m, std::string key)
+{
+	TESTED_NAMESPACE::map<std::string, int>::iterator lower_bound = m.lower_bound(key);
+	TESTED_NAMESPACE::map<std::string, int>::iterator upper_bound = m.upper_bound(key);
+	
+	std::cout << "with key: " << key << std::endl;
+
+	if (lower_bound == m.end())
+		std::cout << "lower_bound: end()" << std::endl;
+	else
+		std::cout << "lower_bound: " << lower_bound->first << std::endl;
+	if (upper_bound == m.end())
+		std::cout << "upper_bound: end()" << std::endl;
+	else
+		std::cout << "upper_bound: " << lower_bound->first << std::endl;
+}
+
 void	test_map(void)
 {
 	TESTED_NAMESPACE::map<int, std::string> map;
@@ -180,12 +214,22 @@ void	test_map(void)
 		std::cout << it->first << ", " << it->second << std::endl;
 	
 	// COUNT, FIND, EQUAL_RANGE, LOWER_BOUND, UPPER_BOUND
-	
 	std::cout << "count: " << map2.count(100) << ", " << map2.find(100)->second << std::endl;
 	std::cout << "empty: " << (map.empty()) << ", " << "size: " << map.size() << ", max_size: " << map.max_size() << std::endl;
 
-	std::cout << "equal_range: " << map.equal_range(100).first->first << std::endl;
-	// std::cout << "equal_range: " << map.equal_range(50).first->first << std::endl;
+	map.swap(map2);
+	map[100] = "vvvv";
+	for (TESTED_NAMESPACE::map<int, std::string>::iterator it = map.begin();it != map.end();++it)
+		std::cout << it->first << ", " << it->second << std::endl;
+	print_bounds(map, 100);
+	print_bounds(map, 50);
+	print_bounds(map, 76);
+	
+	TESTED_NAMESPACE::map<std::string, int> mp;
+
+	mp.insert(TESTED_NAMESPACE::pair<std::string, int>("ft", 42));
+	mp.insert(TESTED_NAMESPACE::pair<std::string, int>("one", 1));
+	print_bounds(mp, "zaa");
 }
 
 void	test_stack(void)

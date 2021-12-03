@@ -250,7 +250,7 @@ namespace ft
 			const_iterator							find(const key_type& key) const
 			{
 				node_pointer n = this->tree.find(key);
-
+	
 				if (n == NULL)
 					return (this->end());
 				return (const_iterator(n));
@@ -258,50 +258,42 @@ namespace ft
 
 			iterator								lower_bound(const Key& key)
 			{
-				iterator it = (--this->end());
+				iterator f = this->find(key);
 
-				for (;it != this->begin();--it)
-					if (!this->tree.compare(key, it->first))
-						break ;
-				if ((--this->end()) == it && key != it->first)
-					return (this->end());
-				return (it);
-			}
+				if (f != this->end())
+					return (f);
+				for (iterator it = --this->end();it != --this->begin();--it)
+					if (!this->tree.compare(it->first, key))
+						return (it);
+				return (this->end());
+			}	
 
 			const_iterator							lower_bound(const Key& key) const
 			{
-				const_iterator it = (--this->end());
-				
-				for (;it != this->begin();--it)
-					if (!this->tree.compare(key, it->first))
-						break ;
-				if ((--this->end()) == it && key != it->first)
-					return (this->end());
-				return (const_iterator(it));
+				const_iterator f = this->find(key);
+
+				if (f != this->end())
+					return (f);
+				for (const_iterator it = --this->end();it != --this->begin();--it)
+					if (!this->tree.compare(it->first, key))
+						return (it);
+				return (this->end());
 			}
 
 			iterator								upper_bound(const Key& key)
 			{
-				iterator it = this->begin();
-
-				for (;it != this->end();++it)
+				for (iterator it = this->begin();it != this->end();++it)
 					if (this->tree.compare(key, it->first))
-						break ;
-				if (it == this->end())
-					return (iterator((this->end())));
-				return (it);
+						return (it);
+				return (this->end());
 			}
 
 			const_iterator							upper_bound(const Key& key) const
 			{
-				const_iterator it = this->begin();
-
-				for (;it != this->end();++it)
+				for (const_iterator it = this->begin();it != this->end();++it)
 					if (this->tree.compare(key, it->first))
-						break ;
-				if (it == this->end())
-					return (const_iterator(this->end()));
-				return (const_iterator(it));
+						return (it);
+				return (this->end());
 			}
 
 			ft::pair<iterator,iterator>				equal_range(const Key& key)
