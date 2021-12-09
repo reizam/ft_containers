@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/27 03:37:48 by kmazier           #+#    #+#             */
-/*   Updated: 2021/12/01 14:56:20 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/05 15:52:33 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,7 +262,7 @@ namespace ft
 
 				if (f != this->end())
 					return (f);
-				for (iterator it = --this->end();it != --this->begin();--it)
+				for (iterator it = this->begin();it != this->end();++it)
 					if (!this->tree.compare(it->first, key))
 						return (it);
 				return (this->end());
@@ -274,7 +274,7 @@ namespace ft
 
 				if (f != this->end())
 					return (f);
-				for (const_iterator it = --this->end();it != --this->begin();--it)
+				for (const_iterator it = this->begin();it != this->end();++it)
 					if (!this->tree.compare(it->first, key))
 						return (it);
 				return (this->end());

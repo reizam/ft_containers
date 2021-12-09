@@ -6,7 +6,7 @@
 /*   By: kmazier <kmazier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/20 01:47:31 by kmazier           #+#    #+#             */
-/*   Updated: 2021/12/01 16:01:17 by kmazier          ###   ########.fr       */
+/*   Updated: 2021/12/09 17:35:22 by kmazier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -256,9 +256,27 @@ void	test_stack(void)
 	std::cout << ", " << stack.size() << ", " << stack.empty() << std::endl;
 }
 
-int main(void)
+int main(int ac, char **av)
 {
-	test_vector();
-	test_map();
+	if (ac == 2 && av[1][0])
+	{
+		switch (av[1][0])
+		{
+			case 'm':
+				test_map();
+				break;
+			case 'v':
+				test_vector();
+				break;
+			case 's':
+				test_stack();
+				break;
+			default:
+				test_map();
+				test_vector();
+				test_stack();
+				break;
+		}
+	}
 	return (0);
 }
